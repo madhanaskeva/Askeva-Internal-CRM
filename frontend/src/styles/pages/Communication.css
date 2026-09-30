@@ -1,0 +1,14 @@
+.comm-head { padding: 14px 18px; border-bottom: 1px solid var(--ink-900); }
+.comm-head__title { font-family: var(--font-display); font-size: 20px; text-transform: uppercase; color: var(--ink-900); line-height: 1.1; }
+.comm-head__meta { font-size: 11.5px; color: var(--text-muted); }
+.comm-list { --gap: 0; }
+.comm-item { padding: 14px 18px; border-bottom: 1px solid var(--track-bg); }
+.comm-item:last-child { border-bottom: 0; }
+.comm-item__when { font-size: 10.5px; }
+.comm-item__msg { font-size: 12.5px; color: var(--ink-900); line-height: 1.4; }
+.ant-btn.btn-pill.comm-item__toggle,
+.ant-btn.btn-pill.comm-item__toggle:not(:disabled):hover { background: var(--paper); font-size: 10px; padding: 2px 8px; }
+
+@media (max-width: 600px) {
+  .comm-head, .comm-item { padding: 12px 14px; }
+}

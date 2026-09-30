@@ -1,0 +1,23 @@
+.fu-cadence {
+  padding: 14px 18px;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  align-items: center;
+}
+.fu-cadence__rule {
+  color: var(--ink-900);
+  background: var(--lime-400);
+  padding: 0 4px;
+}
+.fu-groups {
+  align-items: start;
+}
+.fu-group {
+  min-height: 140px;
+}
+/* Items inside dark "Done" lane keep their own light background. */
+.fu-group .list-row {
+  color: var(--text-body);
+}

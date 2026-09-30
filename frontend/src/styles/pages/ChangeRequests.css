@@ -1,0 +1,23 @@
+.cr-flow__label {
+  margin-right: 6px;
+}
+.cr-table__grid {
+  --cols: minmax(60px, auto) minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto auto;
+  --min-w: 820px;
+}
+.cr-table__row {
+  gap: 6px 12px;
+  font-size: 12.5px;
+}
+.cr-table__row.tone-cream {
+  background: var(--done-bg);
+}
+.cr-table__row .inline-check {
+  grid-column: 2 / -1;
+}
+.cr-table__empty {
+  padding: 18px 16px;
+}
+.justify-self-start {
+  justify-self: start;
+}

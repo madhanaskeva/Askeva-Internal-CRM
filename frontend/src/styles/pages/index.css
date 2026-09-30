@@ -1,0 +1,20 @@
+/* Page-specific styles — one file per page, imported once from global.css. */
+@import "./Dashboard.css";
+@import "./Projects.css";
+@import "./ProjectDetail.css";
+@import "./Deadlines.css";
+@import "./DeadlineParts.css";
+@import "./Finance.css";
+@import "./Salary.css";
+@import "./Settings.css";
+@import "./ProfitLoss.css";
+@import "./Team.css";
+@import "./DailyAudit.css";
+@import "./MyWork.css";
+@import "./ClientPortal.css";
+@import "./Qa.css";
+@import "./Deploy.css";
+@import "./Communication.css";
+@import "./SystemLog.css";
+@import "./FollowUps.css";
+@import "./ChangeRequests.css";

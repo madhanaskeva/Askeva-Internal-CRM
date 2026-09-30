@@ -1,0 +1,35 @@
+.dep-counts { --min: 150px; --gap: 12px; }
+
+.card.dep-flow { padding: 12px 14px; font-size: 11.5px; display: flex; }
+.dep-flow__select { min-width: 220px; }
+
+.dep-record { gap: 8px; background: var(--paper); border: 1px dashed var(--ink-900); border-radius: var(--radius-md); padding: 10px 14px; font-size: 11.5px; }
+.dep-record__smoke { min-width: 160px; }
+.brand-input.dep-record__downtime { flex: 1; min-width: 180px; width: auto; }
+.brand-input.dep-record__note { flex: 2; min-width: 200px; width: auto; }
+
+.dep-grid { display: grid; gap: 16px; align-items: start; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); }
+
+.dep-rel__version { font-family: var(--font-display); font-size: 20px; text-transform: uppercase; color: var(--ink-900); line-height: 1; }
+.dep-rel__url { overflow-wrap: anywhere; }
+.dep-rel__state { font-size: 11.5px; font-weight: 600; }
+
+.dep-task { display: flex; gap: 8px; align-items: center; text-align: left; background: transparent; border: 0; padding: 2px 0; cursor: pointer; font-family: var(--font-body); font-size: 11.5px; color: var(--ink-900); }
+.dep-task:hover span:last-child { text-decoration: underline; }
+
+.dep-gates { background: var(--paper); border: 1px solid var(--ink-900); border-radius: 10px; padding: 8px 10px; }
+.dep-gate { font-size: 11.5px; }
+.dep-gate__mark { width: 18px; height: 18px; flex: 0 0 18px; border-radius: var(--radius-pill); border: 1px solid var(--ink-900); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; }
+
+.ant-btn.btn-pill.dep-btn-shadow { box-shadow: var(--shadow-card-sm); }
+
+.dep-history { font-size: 11px; color: var(--text-body); }
+.dep-history summary { cursor: pointer; color: var(--text-muted); }
+.dep-history__list { padding-top: 6px; --gap: 3px; }
+.dep-history__row { display: grid; grid-template-columns: 60px 130px minmax(0, 1fr); gap: 10px; }
+
+@media (max-width: 600px) {
+  .dep-flow__select { min-width: 0; width: 100%; margin-left: 0; }
+  .dep-history__row { grid-template-columns: 60px minmax(0, 1fr); }
+  .dep-history__row > :last-child { grid-column: 2; }
+}

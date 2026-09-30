@@ -1,0 +1,12 @@
+/* Projects pipeline cards */
+.proj-card__client {
+  font-size: 22px;
+  margin-top: 2px;
+}
+.proj-card__badges {
+  align-items: flex-end;
+}
+.proj-card__line {
+  font-size: 11.5px;
+  color: var(--text-body);
+}

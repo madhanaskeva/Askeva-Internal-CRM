@@ -1,0 +1,43 @@
+/* Inbox card (Inbox + My work) */
+.inbox-card {
+  background: var(--white);
+  border: 1px solid var(--ink-900);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-card-sm);
+}
+.inbox-card__title { font-weight: 700; color: var(--ink-900); font-size: 14px; }
+.ant-btn.btn-pill.inbox-card__accept { box-shadow: var(--shadow-card-sm); }
+.inbox-card__reason.ant-input { flex: 1; min-width: 160px; width: auto; font-size: 11px; }
+
+/* My work */
+.min-130 { --min: 130px; }
+.mw-grid { align-items: start; }
+.card.mw-col { padding: 14px; }
+.mw-item {
+  text-align: left;
+  border: 1px solid var(--ink-900);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  width: 100%;
+}
+.mw-item:hover { filter: brightness(0.98); }
+.card.mw-refs { padding: 14px 18px; }
+.mb-8 { margin-bottom: 8px; }
+.mw-ref {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  font-size: 12px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--divider);
+}
+
+@media (max-width: 600px) {
+  .mw-ref { grid-template-columns: 1fr; gap: 2px; }
+}

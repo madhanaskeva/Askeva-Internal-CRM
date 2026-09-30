@@ -1,0 +1,5 @@
+/* Dashboard — project analytics table columns */
+.dash-table {
+  --cols: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  --min-w: 760px;
+}

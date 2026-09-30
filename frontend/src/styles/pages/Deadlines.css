@@ -1,0 +1,26 @@
+/* Deadlines page */
+.dl-stats { --min: 150px; }
+.dl-stats .card { padding: 14px 18px; }
+.dl-stats .stat-value { margin: 4px 0 0; line-height: 1; }
+.dl-stats__unit { font-size: 20px; }
+
+.card.dl-card { --gap: 14px; padding: 18px; }
+.dl-card__client { font-size: 24px; }
+.dl-card__left { font-size: 24px; line-height: 1; }
+.dl-card__grid { --gap: 12px; font-size: 12px; }
+
+.dl-bar-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.dl-bar { margin: 4px 0; }
+
+.dl-fill--danger { background: var(--danger); }
+.dl-fill--green { background: var(--green-600); }
+.dl-fill--ink { background: var(--ink-900); }
+
+@media (max-width: 600px) {
+  .card.dl-card { padding: 14px; }
+}

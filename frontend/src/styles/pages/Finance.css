@@ -1,0 +1,95 @@
+/* Finance page — per-project finance cards. */
+.fin-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ink-900);
+}
+.fin-head__title { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.fin-head__client { font-size: 22px; }
+
+/* Metric grid: 2 metric columns + a dark P&L cell spanning both rows. */
+.fin-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 1.15fr);
+  border-bottom: 1px solid var(--ink-900);
+}
+.fin-metric { padding: 12px 14px; border-right: 1px solid var(--track-bg); min-width: 0; }
+.fin-metric:nth-child(-n + 2) { border-bottom: 1px solid var(--track-bg); }
+.fin-metric__label { letter-spacing: 0.14em; color: var(--text-muted); }
+.fin-metric__value { font-family: var(--font-display); font-size: 19px; line-height: 1.15; margin-top: 2px; white-space: nowrap; }
+.fin-metric__sub { font-size: 10.5px; color: var(--text-muted); min-height: 14px; }
+.fin-metrics__pl {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.fin-metrics__pl .label-caps { letter-spacing: 0.14em; }
+.fin-metrics__pl-value { font-family: var(--font-display); font-size: 26px; line-height: 1.1; margin-top: 2px; white-space: nowrap; }
+
+.fin-overrun {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--ink-900);
+  font-size: 11.5px;
+}
+.fin-overrun__text { flex: 1; min-width: 160px; }
+
+/* Three list panels: invoices, effort, expenses. */
+.fin-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.fin-panel { border-right: 1px solid var(--track-bg); min-width: 0; }
+.fin-panel:last-child { border-right: 0; }
+.fin-panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--ink-900);
+}
+.fin-line {
+  display: grid;
+  gap: 8px;
+  align-items: center;
+  font-size: 11.5px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--track-bg);
+}
+.fin-line--invoice { grid-template-columns: minmax(0, 1fr) auto 72px; }
+.fin-line--effort { grid-template-columns: minmax(0, 1fr) 78px 78px 24px; }
+.fin-line--expense { grid-template-columns: minmax(0, 1fr) auto 24px; }
+.fin-num { font-size: 10.5px; text-align: right; }
+.fin-effort__name { font-weight: 400; color: var(--text-muted); }
+.fin-unapproved { font-size: 10.5px; padding: 6px 12px; border-bottom: 1px solid var(--track-bg); }
+.fin-inv-status { width: 72px; justify-content: center; }
+.fin-round-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--ink-900);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0;
+}
+
+@media (max-width: 600px) {
+  .fin-head { padding: 12px 14px; flex-wrap: wrap; }
+  .fin-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* visual order: Revenue, Staff / Expenses, Received / P&L (full width) */
+  .fin-metric { border-bottom: 1px solid var(--track-bg); }
+  .fin-metric:nth-child(2),
+  .fin-metric:nth-child(5) { border-right: 0; }
+  .fin-metrics__pl { grid-column: 1 / -1; grid-row: auto; order: 5; }
+  .fin-metric__value { font-size: 17px; }
+  .fin-panel { border-right: 0; }
+  .fin-line--effort { grid-template-columns: minmax(0, 1fr) 64px 64px 24px; }
+}

@@ -1,0 +1,25 @@
+/* Salary & payroll */
+.sal-month { font-size: 22px; }
+.sal-month-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--ink-900);
+  background: var(--white);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  color: var(--ink-900);
+}
+.chip.sal-history { font-size: 11px; font-weight: 400; }
+.sal-status-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--ink-900);
+  cursor: pointer;
+  padding: 0;
+}
+.sal-util { min-width: 120px; }
+.sal-pay { align-items: flex-end; }
