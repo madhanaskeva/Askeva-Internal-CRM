@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { pathFor } from "../../utils/helpers/routes";
 import { useDispatch } from "react-redux";
 import { modalOpened } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import { useAction } from "../../app/useCrm";
 import { acknowledgeOverrun, addEffortDay, removeExpense, toggleInvoice } from "../../utils/entities/projectUtils";
 

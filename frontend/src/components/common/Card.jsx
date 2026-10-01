@@ -1,4 +1,4 @@
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 
 /**
  * The signature Askeva card: ink border, hard offset shadow.

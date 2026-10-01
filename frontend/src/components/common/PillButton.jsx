@@ -1,5 +1,5 @@
 import { Button } from "antd";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 
 /**
  * Ant Design Button in the Askeva pill style.

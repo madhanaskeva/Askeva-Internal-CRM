@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { selectRole } from "../../redux/selectors";
 import { signedOut } from "../../redux/slices/sessionSlice";
 import { modalClosed, switchOpened, taskClosed } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import { useMe, useNavItems } from "../../app/useCrm";
 
 /** Dark left navigation: logo, signed-in user card, role-based nav with live counts. */

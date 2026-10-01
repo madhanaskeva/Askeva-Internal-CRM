@@ -1,5 +1,5 @@
 import Card from "../../components/common/Card";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import { STRUCTURE_DEPTH_TONES } from "../../data";
 
 /** Flatten the active reporting tree (depth-first) — port of the original `tree`. */

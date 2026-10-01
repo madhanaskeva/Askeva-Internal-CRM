@@ -7,7 +7,7 @@ import PillButton from "../../components/common/PillButton";
 import { useDispatch, useSelector } from "react-redux";
 import { selectSession } from "../../redux/selectors";
 import { clientProjectSelected } from "../../redux/slices/sessionSlice";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import { buildClientPortal } from "../../utils/domain/clientPortal";
 import { useAction, useData, useHealthMap } from "../../app/useCrm";
 import { approveClientGate, commentMilestone, markClientInputs } from "../../utils/entities/projectUtils";

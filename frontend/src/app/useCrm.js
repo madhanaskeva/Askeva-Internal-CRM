@@ -12,7 +12,7 @@ import {
   getActorName, getAlerts, getDeadlineRows, getFinMap, getFinRows, getHealthMap, getPmList, getPortfolio, getRulesFrom,
   getStrictFrom, scopeData, useCrmData,
 } from "../utils/storage/crmData";
-import { getAllowedViews, getNavCounts, getNavItems } from "../utils/helpers/navigation";
+import { getAllowedViews, getNavCounts, getNavItems } from "../utils/domain/navigation";
 
 /** Unscoped dataset — settings, syslog, staff admin and role switching use this. */
 export const useFullData = useCrmData;

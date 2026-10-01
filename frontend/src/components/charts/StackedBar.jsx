@@ -1,5 +1,4 @@
-import { cx } from "../../utils/helpers/cx";
-import { wPct } from "../../utils/helpers/pct";
+import { cx, wPct } from "../../utils/helpers/classNames";
 
 /**
  * Segmented horizontal bar. Each segment: { key, pct, tone } where tone is a `.tone-*` key.

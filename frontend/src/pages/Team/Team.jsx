@@ -7,7 +7,7 @@ import Pill from "../../components/common/Pill";
 import StatCard from "../../components/common/StatCard";
 import { useDispatch } from "react-redux";
 import { taskOpened } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import { personDetail, resolvePerson, resolveRange, teamPeople } from "../../utils/domain/team";
 import { PERSON_RANGES } from "../../data";
 import { useData } from "../../app/useCrm";

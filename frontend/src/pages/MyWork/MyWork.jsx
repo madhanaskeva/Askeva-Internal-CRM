@@ -7,7 +7,7 @@ import SectionLabel from "../../components/common/SectionLabel";
 import { useDispatch, useSelector } from "react-redux";
 import { selectRole } from "../../redux/selectors";
 import { taskOpened } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import { buildDevWork } from "../../utils/domain/devWork";
 import { useData, useHealthMap } from "../../app/useCrm";
 

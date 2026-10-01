@@ -1,4 +1,4 @@
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 
 /** Small square check button used for follow-ups, gates, milestones, CR email flags. */
 export default function CheckToggle({ checked, onChange, title, variant = "green", disabled }) {

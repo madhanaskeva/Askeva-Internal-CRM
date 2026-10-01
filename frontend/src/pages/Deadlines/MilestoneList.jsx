@@ -4,7 +4,7 @@ import CheckToggle from "../../components/common/CheckToggle";
 import Pill from "../../components/common/Pill";
 import { useDispatch } from "react-redux";
 import { modalOpened } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import { useAction } from "../../app/useCrm";
 import { setMilestoneTarget, toggleMilestone } from "../../utils/entities/projectUtils";
 

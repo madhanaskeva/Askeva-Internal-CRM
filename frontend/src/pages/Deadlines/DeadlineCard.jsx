@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { pathFor } from "../../utils/helpers/routes";
 import { useDispatch } from "react-redux";
 import { modalOpened } from "../../redux/slices/uiSlice";
-import { wPct } from "../../utils/helpers/pct";
+import { wPct } from "../../utils/helpers/classNames";
 import MilestoneList from "./MilestoneList";
 import RevisionList from "./RevisionList";
 

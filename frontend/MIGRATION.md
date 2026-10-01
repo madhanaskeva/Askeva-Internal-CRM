@@ -70,7 +70,7 @@ to that role's landing page.
 
 - **All CSS lives in `src/styles/`**. Nothing under `pages/` or `components/` imports CSS.
   - `global.css`: design tokens (`:root` variables), base styles, and the shared component, layout, and utility classes. It is imported once, in `main.jsx`.
-  - `utilities.css`: generated `w-pct-N` / `h-pct-N` / `l-pct-N` classes (0–100). Use them via `utils/helpers/pct.js` (`wPct`, `hPct`, `lPct`) for data-driven bar sizes.
+  - `utilities.css`: generated `w-pct-N` / `h-pct-N` / `l-pct-N` classes (0–100). Use them via `utils/helpers/classNames.js` (`wPct`, `hPct`, `lPct`) for data-driven bar sizes.
   - `pages/<Page>.css`: page-specific classes, pulled in through `pages/index.css`.
 - **No inline `style` attributes.** Colours come from tone classes (`.tone-lime`, `.tone-danger`, …) and text classes (`.text-danger`, …). There are no hard-coded hex values outside `:root`.
 - `styles/antdTheme.js` mirrors the tokens for Ant Design, because antd needs literal colour values.

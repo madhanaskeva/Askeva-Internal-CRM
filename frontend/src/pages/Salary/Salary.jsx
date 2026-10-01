@@ -7,7 +7,7 @@ import DataTable from "../../components/tables/DataTable";
 import { useDispatch } from "react-redux";
 import { modalOpened } from "../../redux/slices/uiSlice";
 import { runPayroll } from "../../utils/actions/adminActions";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import { TODAY, monthLabel, shiftMonth } from "../../utils/helpers/date";
 import { useSalary } from "./useSalary";
 import { useAction } from "../../app/useCrm";

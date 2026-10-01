@@ -1,6 +1,6 @@
 import { Button, Input } from "antd";
 import { useState } from "react";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import CheckToggle from "../common/CheckToggle";
 import { useAction } from "../../app/useCrm";
 import { commentFollowup, toggleFollowup, toggleFollowupCourt } from "../../utils/entities/followupUtils";

@@ -4,7 +4,7 @@ import Card from "../../components/common/Card";
 import { COMPLETED_STAGE, GATES, STAGES } from "../../data";
 import { useDispatch } from "react-redux";
 import { toastShown } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import { fmt } from "../../utils/helpers/date";
 import { useAction, useStrict } from "../../app/useCrm";
 import { advanceStage, setHold, toggleGate as toggleGateItem } from "../../utils/entities/projectUtils";

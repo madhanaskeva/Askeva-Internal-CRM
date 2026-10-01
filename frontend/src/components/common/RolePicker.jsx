@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { selectSession } from "../../redux/selectors";
 import { roleSelected } from "../../redux/slices/sessionSlice";
 import { modalClosed, switchClosed, taskClosed } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/helpers/cx";
+import { cx } from "../../utils/helpers/classNames";
 import { useFullData, usePms } from "../../app/useCrm";
 
 /**

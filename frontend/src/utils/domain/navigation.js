@@ -1,8 +1,8 @@
 // Sidebar navigation with live counts — port of the original `navAll` / `nav`.
 import { ROLE_NAV } from "../../data";
 import { getFinMap, getHealthMap, memoLast } from "../storage/crmData";
-import { TODAY, daysBetween } from "./date";
-import { isDone, taskTrack } from "../domain/tasks";
+import { TODAY, daysBetween } from "../helpers/date";
+import { isDone, taskTrack } from "./tasks";
 
 const trackForRole = (role) => (role === "Frontend" ? "frontend" : role === "DevOps" ? "devops" : "backend");
 
