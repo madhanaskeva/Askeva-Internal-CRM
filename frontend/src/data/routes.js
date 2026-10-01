@@ -29,7 +29,7 @@ export const LOGIN_PATH = "/login";
 
 /** Header eyebrow + title per view (detail uses the project name). */
 export const VIEW_TITLES = {
-  teamqa: ["Tester workspace & quality analytics", "Tester"],
+  teamqa: ["Team QA workspace & quality analytics", "Team QA"],
   communication: ["Daily Call MoM, WhatsApp logs & Email confirmations", "Client communication"],
   settings: ["Staff, roles, structure & rules", "Settings"],
   syslog: ["Every change, every role", "System log"],

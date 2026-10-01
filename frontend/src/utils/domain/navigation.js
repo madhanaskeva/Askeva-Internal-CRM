@@ -47,7 +47,7 @@ export const getNavCounts = memoLast((data, full, role) => {
 const navLabel = (view, role) =>
   ({
     dashboard: "Dashboard", mywork: "My work", inbox: "Inbox", qa: "QA dashboard", client: "Client portal", audit: "Daily audit", team: "Team",
-    deploy: "Deploy", pl: "P&L", settings: "Settings", teamqa: "Tester", communication: "Client communication", syslog: "System log",
+    deploy: "Deploy", pl: "P&L", settings: "Settings", teamqa: "Team QA", communication: "Client communication", syslog: "System log",
     projects: "Projects", deadlines: "Deadlines", finance: "Finance & P&L", salary: "Salary & payroll", followups: "Follow-ups", crs: "Change requests",
     tasks: role === "Tester" ? "All tasks" : ["Frontend", "Backend", "DevOps"].includes(role) ? "My tasks" : "Tasks",
   })[view];
@@ -61,7 +61,10 @@ export const getNavItems = memoLast((role, counts) =>
     view,
     label: navLabel(view, role),
     count: counts[view] || 0,
-    children: view === "dashboard" ? DASHBOARD_CHILDREN.map(([v, label]) => ({ view: v, label, count: counts[v] || 0 })) : [],
+    children:
+      view === "dashboard" && role !== "PM"
+        ? DASHBOARD_CHILDREN.map(([v, label]) => ({ view: v, label, count: counts[v] || 0 }))
+        : [],
   })),
 );
 
@@ -73,6 +76,6 @@ export const getNavItems = memoLast((role, counts) =>
 export const getAllowedViews = memoLast((role) => {
   const views = new Set(ROLE_NAV[role]);
   if (views.has("projects")) views.add("detail");
-  if (views.has("dashboard")) DASHBOARD_CHILDREN.forEach(([v]) => views.add(v));
+  if (views.has("dashboard") && role !== "PM") DASHBOARD_CHILDREN.forEach(([v]) => views.add(v));
   return views;
 });

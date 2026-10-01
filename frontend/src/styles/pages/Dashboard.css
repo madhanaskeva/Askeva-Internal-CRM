@@ -1,5 +1,27 @@
-/* Dashboard — project analytics table columns */
+/* Dashboard — project analytics table columns & pagination */
 .dash-table {
   --cols: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
   --min-w: 760px;
+}
+
+.fu-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--ink-900);
+  background: var(--white);
+  color: var(--ink-900);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+.fu-arrow-btn:hover:not(:disabled) {
+  background: var(--lime-400);
+}
+.fu-arrow-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }

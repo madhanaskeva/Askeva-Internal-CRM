@@ -1,49 +1,79 @@
-import { Select } from "antd";
+import { Select, Input } from "antd";
+import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import Card from "../../components/common/Card";
 import ChipGroup from "../../components/common/ChipGroup";
 import PillButton from "../../components/common/PillButton";
 import DataTable from "../../components/tables/DataTable";
-import { useNavigate } from "react-router-dom";
-import { pathFor } from "../../utils/helpers/routes";
-import { activeTesters, buildQaAnalytics, perTesterRows, qaDevelopers, qaWindow } from "../../utils/domain/qa";
+import { activeTesters, buildQaAnalytics, perTesterRows, qaWindow } from "../../utils/domain/qa";
 import QaAnalytics from "../QaWorkspace/components/QaAnalytics";
-import QaSearchBar from "../QaWorkspace/components/QaSearchBar";
-import { useQaSearch } from "../QaWorkspace/useQaSearch";
 import { BUG_SEVERITIES, QA_PERIODS } from "../../data";
 import { useData, useFullData } from "../../app/useCrm";
 
 const num = (title, key) => ({ title, key, align: "right", render: (_, r) => <span className="num-cell">{r[key]}</span> });
 
+const emptyFilters = { tester: null, project: null, severity: null, search: "" };
+
 /** Team QA (managers): per-tester table + filterable QA analytics for the whole team or one tester. */
 export default function TeamQa() {
-  const navigate = useNavigate();
   const data = useData();
   const full = useFullData();
   const [period, setPeriod] = useState("today");
-  const [filters, setFilters] = useState({ tester: null, project: null, developer: null, severity: null });
+  const [filters, setFilters] = useState(emptyFilters);
+  const [draftFilters, setDraftFilters] = useState(emptyFilters);
   const [focus, setFocus] = useState(null);
-  // The original shows the search bar here too; like the original it only filters the tester queue view.
-  const search = useQaSearch();
 
   const testers = useMemo(() => activeTesters(full), [full]);
-  const opts = useMemo(() => ({ project: filters.project, developer: filters.developer, severity: filters.severity }), [filters]);
-  const qa = useMemo(() => buildQaAnalytics(data, testers, filters.tester, period, opts, focus), [data, testers, filters.tester, period, opts, focus]);
-  const perTester = useMemo(() => perTesterRows(data, testers, period, opts), [data, testers, period, opts]);
+  const opts = useMemo(
+    () => ({ project: filters.project, severity: filters.severity, search: filters.search }),
+    [filters]
+  );
+  const qa = useMemo(
+    () => buildQaAnalytics(data, testers, filters.tester, period, opts, focus),
+    [data, testers, filters.tester, period, opts, focus]
+  );
+  const perTesterUnfiltered = useMemo(
+    () => perTesterRows(data, testers, period, opts),
+    [data, testers, period, opts]
+  );
+
+  const perTester = useMemo(() => {
+    if (!filters.search) return perTesterUnfiltered;
+    const q = filters.search.toLowerCase();
+    return perTesterUnfiltered.filter((t) => t.name.toLowerCase().includes(q));
+  }, [perTesterUnfiltered, filters.search]);
 
   const setFilter = (key) => (value) => {
-    setFilters((f) => ({ ...f, [key]: value || null }));
+    const updated = { ...draftFilters, [key]: value || null };
+    setDraftFilters(updated);
+    setFilters(updated);
     setFocus(null);
   };
+
+  const handleSearch = () => {
+    setFilters(draftFilters);
+    setFocus(null);
+  };
+
+  const handleClear = () => {
+    setDraftFilters(emptyFilters);
+    setFilters(emptyFilters);
+    setFocus(null);
+  };
+
   const P = (id) => data.projects.find((p) => p.id === id) || {};
-  const scope = (filters.tester || "QA team") + (filters.project ? " · " + P(filters.project).client : "") + (filters.developer ? " · dev " + filters.developer : "") + (filters.severity ? " · " + filters.severity : "");
+  const scope =
+    (filters.tester || "QA team") +
+    (filters.project ? " · " + P(filters.project).client : "") +
+    (filters.severity ? " · " + filters.severity : "") +
+    (filters.search ? ` · search: "${filters.search}"` : "");
+
   const critical = qa.stats.raisedList.filter((b) => b.severity === "Critical").length;
   const high = qa.stats.raisedList.filter((b) => b.severity === "High").length;
 
   const selects = [
     ["tester", [{ value: "", label: "All testers" }, ...testers.map((t) => ({ value: t, label: t }))]],
     ["project", [{ value: "", label: "All projects" }, ...data.projects.map((p) => ({ value: p.id, label: p.client }))]],
-    ["developer", [{ value: "", label: "All developers" }, ...qaDevelopers(data).map((d) => ({ value: d, label: d }))]],
     ["severity", [{ value: "", label: "All severities" }, ...BUG_SEVERITIES.map((s) => ({ value: s, label: s }))]],
   ];
 
@@ -66,39 +96,41 @@ export default function TeamQa() {
     num("Reopened", "reopened"),
     num("Not a bug", "notABug"),
     num("Pending", "pending"),
-    {
-      title: "",
-      key: "full",
-      render: (_, t) => (
-        <PillButton
-          size="xxs"
-          onClick={() => navigate(pathFor("team") + `?person=${encodeURIComponent(t.name)}&range=${period === "today" ? "today" : period === "week" ? "week" : "all"}`)}
-        >
-          View full activity →
-        </PillButton>
-      ),
-    },
   ];
 
   return (
     <div className="page">
-      <QaSearchBar {...search.barProps} />
-
-      <div className="row row--between row--wrap gap-8">
-        <div className="row row--wrap gap-6">
+      <div className="row row--between row--wrap gap-8 items-center">
+        <div className="row row--wrap gap-6 items-center">
           {selects.map(([key, options]) => (
             <Select
               key={key}
               size="small"
               className="brand-input qa-filter"
-              value={filters[key] || ""}
+              value={draftFilters[key] || ""}
               options={options}
               onChange={setFilter(key)}
               popupMatchSelectWidth={false}
             />
           ))}
+          <Input
+            size="small"
+            placeholder="Search QA..."
+            value={draftFilters.search || ""}
+            onChange={(e) => setDraftFilters((f) => ({ ...f, search: e.target.value }))}
+            onPressEnter={handleSearch}
+            style={{ width: 150 }}
+            className="brand-input"
+            prefix={<Search size={13} className="text-muted" />}
+          />
+          <PillButton size="xs" tone="lime" onClick={handleSearch}>
+            Search
+          </PillButton>
+          <PillButton size="xs" onClick={handleClear}>
+            Clear
+          </PillButton>
         </div>
-        <div className="row row--wrap gap-6">
+        <div className="row row--wrap gap-6 items-center">
           <span className="font-mono fs-11 text-ink">{qaWindow(period).label}</span>
           <ChipGroup options={QA_PERIODS} value={period} onChange={setPeriod} />
         </div>
@@ -120,7 +152,7 @@ export default function TeamQa() {
         <div className="card-foot">Click a tester to scope every panel below to them · drill-down: Tester → Project → Task → Bug → Event.</div>
       </Card>
 
-      <QaAnalytics qa={qa} onFocus={setFocus} />
+      <QaAnalytics qa={qa} onFocus={setFocus} showDev={false} />
     </div>
   );
 }

@@ -12,7 +12,7 @@ export const OPS = ["Naveen", "DevOps"];
 export const ROLE_NAV = {
   SuperAdmin: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team", "pl", "finance", "salary", "settings", "syslog"],
   Admin: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team", "pl", "finance", "salary", "settings"],
-  PM: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team"],
+  PM: ["dashboard", "projects", "deadlines", "crs", "teamqa", "deploy", "audit", "team"],
   PC: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team", "tasks", "followups"],
   Frontend: ["mywork", "inbox", "tasks", "audit"],
   Backend: ["mywork", "inbox", "tasks", "audit"],

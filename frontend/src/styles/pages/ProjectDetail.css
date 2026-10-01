@@ -122,16 +122,37 @@
 
 /* Change requests */
 .pd-cr {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px 14px;
-  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 14px;
+  padding: 12px 14px;
   border: 1px solid var(--ink-900);
   border-radius: var(--radius-md);
+  flex-wrap: wrap;
 }
-.pd-cr__side { align-items: flex-end; }
+.pd-cr__side {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.pd-cr__pill,
+.pd-cr__side .pill,
+.pd-cr__side .ant-btn,
+.pd-cr__side .btn-pill {
+  min-width: 100px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: 600;
+  font-size: 12px;
+}
 
 @media (max-width: 600px) {
   .card.pd-card,
   .card.pd-gate { padding: 14px; }
 }
+

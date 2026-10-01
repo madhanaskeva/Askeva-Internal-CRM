@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import FollowupItem from "../../components/cards/FollowupItem";
 import StackedBar from "../../components/charts/StackedBar";
 import ProgressBar from "../../components/charts/ProgressBar";
@@ -6,6 +7,7 @@ import Card from "../../components/common/Card";
 import ChipGroup from "../../components/common/ChipGroup";
 import EmptyState from "../../components/common/EmptyState";
 import Pill from "../../components/common/Pill";
+import PillButton from "../../components/common/PillButton";
 import SectionLabel from "../../components/common/SectionLabel";
 import StatCard from "../../components/common/StatCard";
 import GridTable from "../../components/tables/GridTable";
@@ -16,16 +18,85 @@ import { taskOpened } from "../../redux/slices/uiSlice";
 import { useDashboard } from "./useDashboard";
 import { DASHBOARD_SORTS } from "../../data";
 
+const PAGE_SIZE = 5;
+
+function ArrowPagination({ currentPage, totalPages, totalItems, pageSize = PAGE_SIZE, onPrev, onNext }) {
+  if (totalPages <= 1) return null;
+  const start = currentPage * pageSize + 1;
+  const end = Math.min((currentPage + 1) * pageSize, totalItems);
+
+  return (
+    <div className="row gap-6 items-center nav-pagination">
+      <span className="font-mono fs-10 text-muted nowrap">
+        {start}–{end} of {totalItems}
+      </span>
+      <div className="row gap-4 items-center">
+        <button
+          type="button"
+          className="fu-arrow-btn"
+          disabled={currentPage === 0}
+          onClick={onPrev}
+          title="Previous (Reverse)"
+        >
+          <ChevronLeft size={12} strokeWidth={2.5} />
+        </button>
+        <span className="font-mono fs-10 text-muted">
+          {currentPage + 1}/{totalPages}
+        </span>
+        <button
+          type="button"
+          className="fu-arrow-btn"
+          disabled={currentPage >= totalPages - 1}
+          onClick={onNext}
+          title="Next (Forward)"
+        >
+          <ChevronRight size={12} strokeWidth={2.5} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [sort, setSort] = useState("risk");
+  const [analyticsPage, setAnalyticsPage] = useState(0);
+  const [followupPage, setFollowupPage] = useState(0);
+  const [stagePage, setStagePage] = useState(0);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   /** Alert target: navigate to its view and/or open its task in the drawer. */
   const openTarget = (target) => {
+    if (!target) return;
+    if (target.taskId) {
+      dispatch(taskOpened(target.taskId));
+      return;
+    }
     if (target.view) navigate(pathFor(target.view, target) + (target.search || ""));
-    if (target.taskId) dispatch(taskOpened(target.taskId));
   };
+
   const { stats, analytics: a, escalations, dashRows, todayFollowups, projectRows } = useDashboard(sort);
+
+  const handleSortChange = (s) => {
+    setSort(s);
+    setAnalyticsPage(0);
+  };
+
+  // Analytics Table pagination (5 per page)
+  const analyticsTotalPages = Math.max(1, Math.ceil(dashRows.length / PAGE_SIZE));
+  const safeAnalyticsPage = Math.min(analyticsPage, analyticsTotalPages - 1);
+  const visibleDashRows = dashRows.slice(safeAnalyticsPage * PAGE_SIZE, (safeAnalyticsPage + 1) * PAGE_SIZE);
+
+  // Today's Follow-ups pagination (5 per page)
+  const followupTotalPages = Math.max(1, Math.ceil(todayFollowups.length / PAGE_SIZE));
+  const safeFollowupPage = Math.min(followupPage, followupTotalPages - 1);
+  const visibleTodayFollowups = todayFollowups.slice(safeFollowupPage * PAGE_SIZE, (safeFollowupPage + 1) * PAGE_SIZE);
+
+  // Projects by Stage pagination (5 per page)
+  const stageTotalPages = Math.max(1, Math.ceil(projectRows.length / PAGE_SIZE));
+  const safeStagePage = Math.min(stagePage, stageTotalPages - 1);
+  const visibleProjectRows = projectRows.slice(safeStagePage * PAGE_SIZE, (safeStagePage + 1) * PAGE_SIZE);
 
   return (
     <div className="page">
@@ -119,12 +190,22 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <ChipGroup label="Sort projects by" options={DASHBOARD_SORTS} value={sort} onChange={setSort} />
+      <div className="row row--between row--wrap gap-8 items-center">
+        <ChipGroup label="Sort projects by" options={DASHBOARD_SORTS} value={sort} onChange={handleSortChange} />
+        <ArrowPagination
+          currentPage={safeAnalyticsPage}
+          totalPages={analyticsTotalPages}
+          totalItems={dashRows.length}
+          pageSize={PAGE_SIZE}
+          onPrev={() => setAnalyticsPage((p) => Math.max(0, p - 1))}
+          onNext={() => setAnalyticsPage((p) => Math.min(analyticsTotalPages - 1, p + 1))}
+        />
+      </div>
 
       <GridTable
         className="dash-table"
         headers={["Project analytics", "Deadline", "Schedule", "Effort budget", "Revenue", "Forecast P&L", "Health"]}
-        rows={dashRows}
+        rows={visibleDashRows}
         onRowClick={(r) => navigate(pathFor("detail", { projectId: r.id }))}
         renderCells={(r) => [
           <div key="p">
@@ -151,19 +232,39 @@ export default function Dashboard() {
 
       <div className="grid-auto min-300">
         <Card className="stack gap-12">
-          <SectionLabel>Today&apos;s follow-ups</SectionLabel>
+          <div className="row row--between items-center">
+            <SectionLabel>Today&apos;s follow-ups</SectionLabel>
+            <ArrowPagination
+              currentPage={safeFollowupPage}
+              totalPages={followupTotalPages}
+              totalItems={todayFollowups.length}
+              pageSize={PAGE_SIZE}
+              onPrev={() => setFollowupPage((p) => Math.max(0, p - 1))}
+              onNext={() => setFollowupPage((p) => Math.min(followupTotalPages - 1, p + 1))}
+            />
+          </div>
           {todayFollowups.length === 0 && <EmptyState>Nothing due today. Daily client call and MoM are still mandatory.</EmptyState>}
           <div className="stack gap-8">
-            {todayFollowups.map((f) => (
+            {visibleTodayFollowups.map((f) => (
               <FollowupItem key={f.id} followup={f} variant="minimal" />
             ))}
           </div>
         </Card>
 
         <Card className="stack gap-12">
-          <SectionLabel>Projects by stage</SectionLabel>
+          <div className="row row--between items-center">
+            <SectionLabel>Projects by stage</SectionLabel>
+            <ArrowPagination
+              currentPage={safeStagePage}
+              totalPages={stageTotalPages}
+              totalItems={projectRows.length}
+              pageSize={PAGE_SIZE}
+              onPrev={() => setStagePage((p) => Math.max(0, p - 1))}
+              onNext={() => setStagePage((p) => Math.min(stageTotalPages - 1, p + 1))}
+            />
+          </div>
           <div className="stack gap-8">
-            {projectRows.map((p) => (
+            {visibleProjectRows.map((p) => (
               <button key={p.id} type="button" className="stage-row" onClick={() => navigate(pathFor("detail", { projectId: p.id }))}>
                 <div className="fw-700 text-ink fs-13">
                   {p.client} <span className="mono-meta">{p.code}</span>

@@ -15,7 +15,8 @@ export const crDays = (c) => {
  */
 export function computeHealth(p, data) {
   const ext = data.crs.filter((c) => c.projectId === p.id && c.status === "Approved").reduce((s, c) => s + crDays(c), 0);
-  const eff = addDays(p.deadline, ext);
+  const m7Target = (p.milestones && p.milestones[6] && p.milestones[6].target) ? p.milestones[6].target : p.deadline;
+  const eff = addDays(m7Target || p.deadline, ext);
   const left = daysBetween(eff, TODAY);
   const overdueMs = p.milestones.filter((m) => !m.actual && daysBetween(m.target, TODAY) < 0);
   const next = p.milestones.find((m) => !m.actual);

@@ -26,7 +26,7 @@ const TableCard = ({ title, meta, children }) => (
  * retests, pending, test-next and the chronological timeline.
  * `qa` is buildQaAnalytics(...); `onFocus(projectId|null)` drives the drill-down.
  */
-export default function QaAnalytics({ qa, onFocus }) {
+export default function QaAnalytics({ qa, onFocus, showDev = true }) {
   const dispatch = useDispatch();
   const open = (taskId) => dispatch(taskOpened(taskId));
 
@@ -166,13 +166,15 @@ export default function QaAnalytics({ qa, onFocus }) {
           <DataTable columns={severityCols} dataSource={qa.severity} rowKey="sev" flat className="card-table" />
         </TableCard>
 
-        <Card flush>
-          <div className="card-head qa-head-stack">
-            <span className="section-title__text">Bugs found by developer</span>
-            <span className="fs-10 text-muted">Operational quality signal, not a performance score — harder modules produce more bugs.</span>
-          </div>
-          {qa.byDev.length > 0 && <DataTable columns={devCols} dataSource={qa.byDev} rowKey="dev" flat className="card-table" />}
-        </Card>
+        {showDev && (
+          <Card flush>
+            <div className="card-head qa-head-stack">
+              <span className="section-title__text">Bugs found by developer</span>
+              <span className="fs-10 text-muted">Operational quality signal, not a performance score — harder modules produce more bugs.</span>
+            </div>
+            {qa.byDev.length > 0 && <DataTable columns={devCols} dataSource={qa.byDev} rowKey="dev" flat className="card-table" />}
+          </Card>
+        )}
       </div>
 
       <div className="grid-auto min-160 count-grid">

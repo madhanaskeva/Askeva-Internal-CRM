@@ -11,7 +11,7 @@ import { adjustPayslip } from "../entities/payrollUtils";
 import { addExpense, addInvoice, addProject, getProjectById, logEffort, logOverrun, requestRevision } from "../entities/projectUtils";
 import { isStrict } from "../entities/ruleUtils";
 import { saveStaff } from "../entities/staffUtils";
-import { addTask } from "../entities/taskUtils";
+import { addTask, editTaskRecord } from "../entities/taskUtils";
 import { raiseBug } from "../entities/bugUtils";
 import { done } from "./context";
 
@@ -61,8 +61,22 @@ const handlers = {
     addProject(ctx, { project: buildProject(form) });
   },
 
-  task(form, _extra, ctx) {
+  task(form, extra, ctx) {
     if (blank(form.title)) return "Task title is required";
+    if (extra?.taskId) {
+      editTaskRecord(ctx, {
+        taskId: extra.taskId,
+        updates: {
+          projectId: form.projectId,
+          title: form.title,
+          assignee: form.assignee,
+          due: form.due,
+          priority: form.priority,
+          ...(form.opsKind ? { opsKind: form.opsKind } : {}),
+        },
+      });
+      return { message: "Task updated successfully." };
+    }
     const role = ctx.role;
     const project = getProjectById(form.projectId) || { stage: 0 };
     const needsInbox = DEV_TRACK({ assignee: form.assignee }) && role !== "DevOps";

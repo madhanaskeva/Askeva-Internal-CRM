@@ -748,3 +748,32 @@ button.grid-table__row:hover { background: var(--hover-bg); }
   .brand-modal .ant-modal-container { padding: 16px; }
   .brand-drawer .ant-drawer-body { padding: 16px; }
 }
+
+/* Task item edit/delete action buttons */
+.task-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--ink-900);
+  background: var(--paper);
+  color: var(--ink-900);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.task-action-btn:hover {
+  background: var(--ink-900);
+  color: var(--paper);
+}
+.task-action-btn--delete {
+  color: #d9383a;
+  border-color: #d9383a;
+}
+.task-action-btn--delete:hover {
+  background: #d9383a;
+  color: #ffffff;
+}

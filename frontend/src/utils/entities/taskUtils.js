@@ -22,6 +22,20 @@ export function addTask(ctx, { task }) {
   addLog(ctx);
 }
 
+export function deleteTask(ctx, { taskId }) {
+  const x = getTaskById(taskId);
+  tasks.remove(taskId);
+  addLog(ctx, "Deleted task " + (x ? `${x.id} · ${x.title}` : taskId));
+}
+
+export function editTaskRecord(ctx, { taskId, updates }) {
+  tasks.update(taskId, (t) => {
+    Object.assign(t, updates);
+    if (updates.assignee) t.track = trackOf(t);
+  });
+  addLog(ctx, "Updated task " + taskId);
+}
+
 /** Update one task: `updates` is an object or an updater fn (see collection.js). */
 export const updateTask = (taskId, updates) => tasks.update(taskId, updates);
 

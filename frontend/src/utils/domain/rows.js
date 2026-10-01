@@ -98,7 +98,9 @@ export function buildFinRow(p, f, h, rate) {
  * @param {object} p project, @param {object} h computeHealth(p)
  */
 export function buildDeadlineRow(p, h) {
-  const revDays = daysBetween(p.deadline, p.baselineDeadline || p.deadline);
+  const m7Target = (p.milestones && p.milestones[6] && p.milestones[6].target) ? p.milestones[6].target : p.deadline;
+  const targetDate = m7Target || p.deadline;
+  const revDays = daysBetween(targetDate, p.baselineDeadline || targetDate);
   const variance = h.elapsed - h.done;
   return {
     id: p.id,
@@ -107,8 +109,8 @@ export function buildDeadlineRow(p, h) {
     billing: p.billing,
     status: h.status,
     statusTone: healthTone(h.status),
-    deadline: fmt(p.deadline),
-    deadlineIso: p.deadline,
+    deadline: fmt(targetDate),
+    deadlineIso: targetDate,
     effective: fmt(h.eff),
     hasExt: h.ext > 0,
     extLabel: `+${h.ext}d approved via CR`,

@@ -1,5 +1,6 @@
-import { useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CrEmailToggle, CrNextButton } from "../../components/cards/CrActions";
 import FollowupItem from "../../components/cards/FollowupItem";
 import TaskRow from "../../components/cards/TaskRow";
@@ -8,7 +9,6 @@ import EmptyState from "../../components/common/EmptyState";
 import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
 import { STAGES } from "../../data";
-import { useNavigate } from "react-router-dom";
 import { pathFor } from "../../utils/helpers/routes";
 import { useDispatch } from "react-redux";
 import { modalOpened } from "../../redux/slices/uiSlice";
@@ -23,12 +23,47 @@ import CommitmentsCard from "./CommitmentsCard";
 import StageGateCard from "./StageGateCard";
 import { useData, useDeadlineRows, useFinRows, useStrict } from "../../app/useCrm";
 
-function ListCard({ title, action, onAction, children }) {
+function ArrowPagination({ currentPage, totalPages, totalItems, pageSize = 6, onPrev, onNext }) {
+  if (totalPages <= 1) return null;
+  const start = currentPage * pageSize + 1;
+  const end = Math.min((currentPage + 1) * pageSize, totalItems);
+
+  return (
+    <div className="row gap-6 items-center nav-pagination">
+      <span className="fs-12 text-muted font-mono mr-4">
+        {start}-{end} of {totalItems}
+      </span>
+      <button
+        type="button"
+        className="icon-btn-sm text-ink hover-bg-paper"
+        onClick={onPrev}
+        disabled={currentPage === 0}
+        style={{ opacity: currentPage === 0 ? 0.3 : 1, cursor: currentPage === 0 ? "not-allowed" : "pointer" }}
+      >
+        <ChevronLeft size={16} />
+      </button>
+      <button
+        type="button"
+        className="icon-btn-sm text-ink hover-bg-paper"
+        onClick={onNext}
+        disabled={currentPage >= totalPages - 1}
+        style={{ opacity: currentPage >= totalPages - 1 ? 0.3 : 1, cursor: currentPage >= totalPages - 1 ? "not-allowed" : "pointer" }}
+      >
+        <ChevronRight size={16} />
+      </button>
+    </div>
+  );
+}
+
+function ListCard({ title, action, onAction, pagination, children }) {
   return (
     <Card className="pd-card">
-      <div className="row row--between row--wrap gap-10 mb-10">
+      <div className="row row--between row--wrap gap-10 mb-10 items-center">
         <span className="label-caps fw-700 text-ink">{title}</span>
-        <PillButton size="sm" className="pd-shadow-btn" onClick={onAction}>{action}</PillButton>
+        <div className="row row--center gap-8 items-center">
+          {pagination}
+          <PillButton size="sm" className="pd-shadow-btn" onClick={onAction}>{action}</PillButton>
+        </div>
       </div>
       {children}
     </Card>
@@ -46,6 +81,11 @@ export default function ProjectDetail() {
   const fin = useFinRows().find((r) => r.id === projectId);
   const p = data.projects.find((x) => x.id === projectId);
 
+  const [taskPage, setTaskPage] = useState(0);
+  const [fuPage, setFuPage] = useState(0);
+  const taskPageSize = 10;
+  const fuPageSize = 5;
+
   const lists = useMemo(() => {
     if (!p) return null;
     const tasks = data.tasks.filter((t) => t.projectId === p.id);
@@ -58,6 +98,22 @@ export default function ProjectDetail() {
       crs: data.crs.filter((c) => c.projectId === p.id).map((c) => mapCr(c, data, strict)),
     };
   }, [p, data, strict]);
+
+  const taskTotalPages = Math.ceil((lists?.tasks?.length || 0) / taskPageSize);
+  const safeTaskPage = Math.min(taskPage, Math.max(0, taskTotalPages - 1));
+  const visibleTasks = useMemo(() => {
+    if (!lists?.tasks) return [];
+    const start = safeTaskPage * taskPageSize;
+    return lists.tasks.slice(start, start + taskPageSize);
+  }, [lists?.tasks, safeTaskPage]);
+
+  const fuTotalPages = Math.ceil((lists?.followups?.length || 0) / fuPageSize);
+  const safeFuPage = Math.min(fuPage, Math.max(0, fuTotalPages - 1));
+  const visibleFollowups = useMemo(() => {
+    if (!lists?.followups) return [];
+    const start = safeFuPage * fuPageSize;
+    return lists.followups.slice(start, start + fuPageSize);
+  }, [lists?.followups, safeFuPage]);
 
   if (!p) {
     return (
@@ -93,16 +149,44 @@ export default function ProjectDetail() {
       <BudgetCard p={p} fin={fin} />
 
       <div className="grid-auto min-320">
-        <ListCard title={`Tasks · ${lists.taskCount}`} action="+ Task" onAction={() => open("task")}>
+        <ListCard
+          title={`Tasks · ${lists.taskCount}`}
+          action="+ Task"
+          onAction={() => open("task")}
+          pagination={
+            <ArrowPagination
+              currentPage={safeTaskPage}
+              totalPages={taskTotalPages}
+              totalItems={lists.tasks.length}
+              pageSize={taskPageSize}
+              onPrev={() => setTaskPage((p) => Math.max(0, p - 1))}
+              onNext={() => setTaskPage((p) => Math.min(taskTotalPages - 1, p + 1))}
+            />
+          }
+        >
           <div className="stack gap-6">
-            {lists.tasks.map((t) => (
+            {visibleTasks.map((t) => (
               <TaskRow key={t.id} task={t} />
             ))}
           </div>
         </ListCard>
-        <ListCard title={`Follow-ups · ${lists.fuCount}`} action="+ Follow-up" onAction={() => open("followup")}>
+        <ListCard
+          title={`Follow-ups · ${lists.fuCount}`}
+          action="+ Follow-up"
+          onAction={() => open("followup")}
+          pagination={
+            <ArrowPagination
+              currentPage={safeFuPage}
+              totalPages={fuTotalPages}
+              totalItems={lists.followups.length}
+              pageSize={fuPageSize}
+              onPrev={() => setFuPage((p) => Math.max(0, p - 1))}
+              onNext={() => setFuPage((p) => Math.min(fuTotalPages - 1, p + 1))}
+            />
+          }
+        >
           <div className="stack gap-6">
-            {lists.followups.map((f) => (
+            {visibleFollowups.map((f) => (
               <FollowupItem key={f.id} followup={f} variant="compact" />
             ))}
           </div>
@@ -145,8 +229,8 @@ export default function ProjectDetail() {
                 <div className="fw-600 text-ink">{c.title}</div>
                 <div className="meta">{c.detail}</div>
               </div>
-              <div className="stack gap-6 pd-cr__side">
-                <Pill tone={c.statusTone}>{c.status}</Pill>
+              <div className="pd-cr__side">
+                <Pill tone={c.statusTone} className="pd-cr__pill">{c.status}</Pill>
                 <CrNextButton cr={c} />
               </div>
               {c.needsEmail && <CrEmailToggle cr={c} />}
@@ -157,3 +241,4 @@ export default function ProjectDetail() {
     </div>
   );
 }
+

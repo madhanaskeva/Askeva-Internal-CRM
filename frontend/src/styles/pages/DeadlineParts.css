@@ -58,6 +58,20 @@
 .dl-ms-tile:hover { filter: brightness(0.97); }
 .pill.dl-ms-tile__dot { padding: 1px 6px; }
 .dl-ms-tile__name { font-size: 10.5px; line-height: 1.3; color: var(--ink-900); font-weight: 600; }
+.dl-ms-tile__date-picker.ant-picker {
+  padding: 0 2px;
+  font-size: 10px;
+  height: 20px;
+  border-radius: 4px;
+}
+.dl-ms-tile__date-picker.ant-picker .ant-picker-input > input {
+  font-size: 10px;
+  color: var(--ink-900);
+  font-family: var(--font-body);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
 
 @media (max-width: 900px) {
   .dl-ms-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }

@@ -1,16 +1,3 @@
-.fu-cadence {
-  padding: 14px 18px;
-  display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
-  font-size: 12px;
-  align-items: center;
-}
-.fu-cadence__rule {
-  color: var(--ink-900);
-  background: var(--lime-400);
-  padding: 0 4px;
-}
 .fu-groups {
   align-items: start;
 }
@@ -20,4 +7,31 @@
 /* Items inside dark "Done" lane keep their own light background. */
 .fu-group .list-row {
   color: var(--text-body);
+}
+
+/* Overdue card pagination navigation */
+.fu-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--ink-900);
+  background: var(--white);
+  color: var(--ink-900);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+.fu-arrow-btn:hover:not(:disabled) {
+  background: var(--lime-400);
+}
+.fu-arrow-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.fu-col-footer {
+  padding: 8px 4px 2px;
+  border-top: 1px solid var(--track-bg);
 }

@@ -67,12 +67,25 @@ export const MODAL_FORMS = {
   },
 
   task: {
-    title: ({ role }) => (role === "DevOps" ? "New infra task (self-created · no acceptance)" : "New task"),
-    submit: ({ role }) => (role === "DevOps" ? "Add infra task" : "Add task"),
-    initial: (c) =>
-      c.role === "DevOps"
+    title: ({ extra, role }) => (extra?.taskId ? "Edit task" : role === "DevOps" ? "New infra task (self-created · no acceptance)" : "New task"),
+    submit: ({ extra, role }) => (extra?.taskId ? "Save changes" : role === "DevOps" ? "Add infra task" : "Add task"),
+    initial: (c) => {
+      if (c.extra?.task) {
+        const t = c.extra.task;
+        return {
+          projectId: t.projectId,
+          title: t.title,
+          assignee: t.assignee,
+          due: t.due,
+          stage: t.stage || "",
+          priority: t.priority || "Med",
+          opsKind: t.opsKind || "",
+        };
+      }
+      return c.role === "DevOps"
         ? { projectId: defaultPid(c), title: "", assignee: "Naveen", due: TODAY, stage: "Infra", priority: "Med", opsKind: "Server provisioning" }
-        : { projectId: defaultPid(c), title: "", assignee: "PC", due: TODAY, stage: "", priority: "Med", opsKind: "" },
+        : { projectId: defaultPid(c), title: "", assignee: "PC", due: TODAY, stage: "", priority: "Med", opsKind: "" };
+    },
     fields: ({ data, role }, form) => [
       F("projectId", "Project", "select", { options: projOpts(data) }),
       F("title", "Task", "text", { placeholder: "What needs to happen" }),

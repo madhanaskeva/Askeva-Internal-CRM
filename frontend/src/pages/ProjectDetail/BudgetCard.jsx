@@ -10,27 +10,18 @@ import { inr, parseAmount } from "../../utils/helpers/format";
 /** Team & budget view-model — port of the original `d.tb`. */
 function teamBudget(p) {
   const b = p.budget || {};
-  const t = p.team || {};
   const days = (b.uiDays || 0) + (b.backendDays || 0) + (b.testDays || 0) + (b.pcDays || 0);
   const internal = days * (b.dayRate || 0);
   const price = parseAmount(p.cost);
   const margin = price ? Math.round(((price - internal) / price) * 100) : null;
-  const rows = [
-    ["UI / Frontend", t.ui, b.uiDays],
-    ["Backend", t.backend, b.backendDays],
-    ["Manual tester", t.tester, b.testDays],
-    ["Senior Dev / Architect", t.seniorDev, "review"],
-    ["Project Coordinator", "PC", b.pcDays],
-  ].map(([role, name, d]) => ({ role, name: name || "TBD", days: typeof d === "number" ? d + " days" : d }));
+
   return {
-    rows,
     totalDays: days + " man-days",
     internal: inr(internal),
     rate: inr(b.dayRate || 0) + " / day",
     marginLabel: margin == null ? "—" : margin + "% gross margin",
     marginColor: margin == null ? "muted" : margin < 30 ? "danger" : "green",
     burn: `${Math.max(0, daysBetween(TODAY, p.start))} calendar days elapsed of ${Math.max(1, daysBetween(p.deadline, p.start))}`,
-    spocContact: [p.spocPhone, p.spocEmail].filter(Boolean).join(" · ") || "contact details not captured",
   };
 }
 
@@ -44,7 +35,7 @@ function Tile({ label, value, sub, tone = "paper", valueClass = "text-ink", labe
   );
 }
 
-/** Staff allocation (SOP §6.2) + budget, cost burn and quick finance actions. */
+/** Budget, cost burn and quick finance actions. */
 export default function BudgetCard({ p, fin }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -52,22 +43,7 @@ export default function BudgetCard({ p, fin }) {
   const open = (kind) => dispatch(modalOpened({ kind, extra: { projectId: p.id } }));
 
   return (
-    <Card className="grid-auto min-260 pd-card">
-      <div className="stack gap-8">
-        <div className="label-caps fw-700 text-ink">Staff allocation · SOP §6.2</div>
-        {tb.rows.map((r) => (
-          <div key={r.role} className="pd-alloc-row">
-            <span className="text-muted">{r.role}</span>
-            <strong className="text-ink">{r.name}</strong>
-            <span className="font-mono fs-11 text-ink">{r.days}</span>
-          </div>
-        ))}
-        <div className="meta pd-meta">
-          {p.projectType || "—"} · Domain: {p.domain || "—"} · Cloud: {p.cloud || "—"}
-        </div>
-        <div className="meta pd-meta">SPOC contact: {tb.spocContact}</div>
-      </div>
-
+    <Card className="pd-card">
       <div className="stack gap-8">
         <div className="label-caps fw-700 text-ink">Budget</div>
         <div className="grid-2 pd-tiles">

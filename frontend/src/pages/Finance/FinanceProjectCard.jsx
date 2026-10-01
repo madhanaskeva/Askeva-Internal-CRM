@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import ProgressBar from "../../components/charts/ProgressBar";
 import Card from "../../components/common/Card";
 import Pill from "../../components/common/Pill";
@@ -20,12 +21,11 @@ function Metric({ label, value, valueColor = "ink", children }) {
   );
 }
 
-function Panel({ title, action, onAction, children }) {
+function Panel({ title, isHighlighted, children }) {
   return (
-    <div className="fin-panel">
+    <div className={cx("fin-panel", isHighlighted && "fin-panel--highlight")}>
       <div className="fin-panel__head">
         <span className="label-caps fw-700 text-ink">{title}</span>
-        <PillButton size="xxs" onClick={onAction}>{action}</PillButton>
       </div>
       {children}
     </div>
@@ -33,13 +33,38 @@ function Panel({ title, action, onAction, children }) {
 }
 
 /** One project's finance card — port of a `finRows` item in the original FINANCE view. */
-export default function FinanceProjectCard({ row: r }) {
+export default function FinanceProjectCard({ row: r, activeFilter = "all" }) {
   const dispatch = useDispatch();
   const run = useAction();
   const navigate = useNavigate();
   const projectId = r.id;
   const openModal = (kind) => dispatch(modalOpened({ kind, extra: { projectId } }));
   const ov = r.overrun;
+
+  const [filterCat, filterVal] = (activeFilter || "").split(":");
+
+  const visibleInvoices = useMemo(() => {
+    if (filterCat !== "invoice" || filterVal === "all") return r.invoices;
+    if (filterVal === "overdue") return r.invoices.filter((i) => i.status.toLowerCase() === "overdue");
+    if (filterVal === "due") return r.invoices.filter((i) => i.status.toLowerCase() === "due");
+    if (filterVal === "received") return r.invoices.filter((i) => i.status.toLowerCase() === "received");
+    return r.invoices;
+  }, [r.invoices, filterCat, filterVal]);
+
+  const visibleEffort = useMemo(() => {
+    if (filterCat !== "logdays" || filterVal === "all") return r.effortRows;
+    if (filterVal === "over_budget") return r.effortRows.filter((e) => e.over);
+    if (filterVal === "has_effort") return r.effortRows.filter((e) => e.pct > 0);
+    if (["ui", "backend", "tester", "pc"].includes(filterVal)) {
+      return r.effortRows.filter((e) => e.key === filterVal);
+    }
+    return r.effortRows;
+  }, [r.effortRows, filterCat, filterVal]);
+
+  const visibleExpenses = useMemo(() => {
+    if (filterCat !== "expense" || filterVal === "all" || filterVal === "has_expense") return r.expenseRows;
+    return r.expenseRows.filter((x) => x.category.toLowerCase().includes(filterVal.toLowerCase()));
+  }, [r.expenseRows, filterCat, filterVal]);
 
   return (
     <Card flush>
@@ -88,70 +113,82 @@ export default function FinanceProjectCard({ row: r }) {
       )}
 
       <div className="fin-panels">
-        <Panel title="Invoices & payments" action="+ Invoice" onAction={() => openModal("invoice")}>
-          {r.invoices.map((i) => (
-            <div key={i.id} className="fin-line fin-line--invoice">
-              <div className="flex-1">
-                <div className="ellipsis fw-600 text-ink">{i.label}</div>
-                <div className="fs-10 text-muted">{i.date}</div>
+        <Panel title="Invoices & payments" isHighlighted={filterCat === "invoice"}>
+          {visibleInvoices.length > 0 ? (
+            visibleInvoices.map((i) => (
+              <div key={i.id} className="fin-line fin-line--invoice">
+                <div className="flex-1">
+                  <div className="ellipsis fw-600 text-ink">{i.label}</div>
+                  <div className="fs-10 text-muted">{i.date}</div>
+                </div>
+                <span className="font-mono fs-11 text-ink">{i.amount}</span>
+                <button
+                  type="button"
+                  title="Toggle received"
+                  className={cx("pill pill--xs pill-btn fin-inv-status", `tone-${i.tone}`)}
+                  onClick={() => run(toggleInvoice, { projectId, invoiceId: i.id })}
+                >
+                  {i.status}
+                </button>
               </div>
-              <span className="font-mono fs-11 text-ink">{i.amount}</span>
-              <button
-                type="button"
-                title="Toggle received"
-                className={cx("pill pill--xs pill-btn fin-inv-status", `tone-${i.tone}`)}
-                onClick={() => run(toggleInvoice, { projectId, invoiceId: i.id })}
-              >
-                {i.status}
-              </button>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="p-8 fs-11 text-muted text-center">No matching invoices</div>
+          )}
         </Panel>
 
-        <Panel title="Staff effort & cost" action="+ Log days" onAction={() => openModal("effort")}>
+        <Panel title="Staff effort & cost" isHighlighted={filterCat === "logdays"}>
           {r.unapprovedDays > 0 && (
             <div className="fin-unapproved text-danger fw-600">{r.unapprovedDays} days on unapproved CRs — unbilled</div>
           )}
-          {r.effortRows.map((e) => (
-            <div key={e.key} className="fin-line fin-line--effort">
-              <div className="flex-1">
-                <div className="ellipsis fw-600 text-ink">
-                  {e.role} <span className="fin-effort__name">· {e.name}</span>
+          {visibleEffort.length > 0 ? (
+            visibleEffort.map((e) => (
+              <div key={e.key} className="fin-line fin-line--effort">
+                <div className="flex-1">
+                  <div className="ellipsis fw-600 text-ink">
+                    {e.role} <span className="fin-effort__name">· {e.name}</span>
+                  </div>
+                  <ProgressBar pct={e.pct} height={3} fill={e.over ? "danger" : "ink"} className="mt-4" />
                 </div>
-                <ProgressBar pct={e.pct} height={3} fill={e.over ? "danger" : "ink"} className="mt-4" />
+                <span className={`font-mono fin-num text-${e.over ? "danger" : "ink"}`}>{e.label}</span>
+                <span className="font-mono fin-num text-muted">{e.cost}</span>
+                <button
+                  type="button"
+                  title="+1 day"
+                  className="fin-round-btn tone-lime fw-700"
+                  onClick={() => run(addEffortDay, { projectId, key: e.key })}
+                >
+                  +1
+                </button>
               </div>
-              <span className={`font-mono fin-num text-${e.over ? "danger" : "ink"}`}>{e.label}</span>
-              <span className="font-mono fin-num text-muted">{e.cost}</span>
-              <button
-                type="button"
-                title="+1 day"
-                className="fin-round-btn tone-lime fw-700"
-                onClick={() => run(addEffortDay, { projectId, key: e.key })}
-              >
-                +1
-              </button>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="p-8 fs-11 text-muted text-center">No matching log days</div>
+          )}
         </Panel>
 
-        <Panel title="Expenses" action="+ Expense" onAction={() => openModal("expense")}>
-          {r.expenseRows.map((x) => (
-            <div key={x.id} className="fin-line fin-line--expense">
-              <div className="flex-1">
-                <div className="ellipsis fw-600 text-ink">{x.desc}</div>
-                <div className="fs-10 text-muted">{x.category} · {x.date}</div>
+        <Panel title="Expenses" isHighlighted={filterCat === "expense"}>
+          {visibleExpenses.length > 0 ? (
+            visibleExpenses.map((x) => (
+              <div key={x.id} className="fin-line fin-line--expense">
+                <div className="flex-1">
+                  <div className="ellipsis fw-600 text-ink">{x.desc}</div>
+                  <div className="fs-10 text-muted">{x.category} · {x.date}</div>
+                </div>
+                <span className="font-mono fs-11 text-ink">{x.amount}</span>
+                <button
+                  type="button"
+                  title="Remove"
+                  className="fin-round-btn tone-white"
+                  onClick={() => run(removeExpense, { projectId, expenseId: x.id })}
+                >
+                  ✕
+                </button>
               </div>
-              <span className="font-mono fs-11 text-ink">{x.amount}</span>
-              <button
-                type="button"
-                title="Remove"
-                className="fin-round-btn tone-white"
-                onClick={() => run(removeExpense, { projectId, expenseId: x.id })}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="p-8 fs-11 text-muted text-center">No matching expenses</div>
+          )}
         </Panel>
       </div>
     </Card>
