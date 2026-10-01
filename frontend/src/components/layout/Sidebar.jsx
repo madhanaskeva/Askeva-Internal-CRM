@@ -1,22 +1,22 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { images } from "../../assets/images";
-import { ROLE_LABEL } from "../../constants/crm";
-import { LOGIN_PATH, pathFor, viewForPath } from "../../constants/routes";
+import { LOGIN_PATH, ROLE_LABEL } from "../../data";
+import { pathFor, viewForPath } from "../../utils/helpers/routes";
 import { useDispatch, useSelector } from "react-redux";
-import { selectMe, selectRole } from "../../redux/selectors";
-import { selectNavItems } from "../../redux/selectors/navSelectors";
+import { selectRole } from "../../redux/selectors";
 import { signedOut } from "../../redux/slices/sessionSlice";
 import { modalClosed, switchOpened, taskClosed } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
+import { useMe, useNavItems } from "../../app/useCrm";
 
 /** Dark left navigation: logo, signed-in user card, role-based nav with live counts. */
 export default function Sidebar({ onNavigate, className }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const me = useSelector(selectMe);
+  const me = useMe();
   const role = useSelector(selectRole);
-  const items = useSelector(selectNavItems);
+  const items = useNavItems();
   const current = viewForPath(pathname);
 
   const signOut = () => {

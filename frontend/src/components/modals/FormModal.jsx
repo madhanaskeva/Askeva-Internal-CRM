@@ -1,12 +1,13 @@
 import { Form, Modal } from "antd";
 import { useMemo, useState } from "react";
-import { MODAL_FORMS, resolve } from "../../forms/modalForms";
+import { MODAL_FORMS, resolve } from "../forms/modalForms";
 import { useDispatch, useSelector } from "react-redux";
-import { selectData, selectFullData, selectRole, selectStrict } from "../../redux/selectors";
+import { selectRole } from "../../redux/selectors";
 import { modalClosed } from "../../redux/slices/uiSlice";
 import { submitModal } from "../../utils/actions/formActions";
 import PillButton from "../common/PillButton";
 import FormField from "../forms/FormField";
+import { useAction, useData, useFullData, useStrict } from "../../app/useCrm";
 
 /** Global form modal — opened with `dispatch(modalOpened({ kind, extra }))`. */
 export default function FormModal() {
@@ -18,17 +19,18 @@ export default function FormModal() {
 
 function FormModalBody({ modal }) {
   const dispatch = useDispatch();
+  const run = useAction();
   const role = useSelector(selectRole);
-  const data = useSelector(selectData);
-  const fullData = useSelector(selectFullData);
-  const strict = useSelector(selectStrict);
+  const data = useData();
+  const fullData = useFullData();
+  const strict = useStrict();
   const def = MODAL_FORMS[modal.kind];
   const ctx = useMemo(() => ({ role, data, fullData, strict, extra: modal.extra || {} }), [role, data, fullData, strict, modal.extra]);
   const [form, setForm] = useState(() => def.initial(ctx));
   const [error, setError] = useState("");
 
   const close = () => dispatch(modalClosed());
-  const submit = () => setError(submitModal(modal.kind, form, modal.extra) || "");
+  const submit = () => setError(run(submitModal, modal.kind, form, modal.extra).error || "");
   const note = def.note ? def.note(ctx) : "";
   const fields = def.fields(ctx, form);
 

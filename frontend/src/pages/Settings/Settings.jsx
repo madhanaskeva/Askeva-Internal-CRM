@@ -4,27 +4,22 @@ import CountCard from "../../components/cards/CountCard";
 import ChipGroup from "../../components/common/ChipGroup";
 import PillButton from "../../components/common/PillButton";
 import { useSelector } from "react-redux";
-import { selectFullData, selectPms, selectRole } from "../../redux/selectors";
+import { selectRole } from "../../redux/selectors";
 import { resetDemo } from "../../utils/actions/adminActions";
 import ClientsTab from "./ClientsTab";
 import PmTab from "./PmTab";
 import RulesTab from "./RulesTab";
 import StaffTab from "./StaffTab";
 import StructureTab from "./StructureTab";
-
-const TABS = [
-  { value: "staff", label: "Staff & roles" },
-  { value: "tree", label: "Team structure" },
-  { value: "pm", label: "Project → PM" },
-  { value: "rules", label: "System rules" },
-  { value: "clients", label: "Client accounts" },
-];
+import { SETTINGS_TABS } from "../../data";
+import { useAction, useFullData, usePms } from "../../app/useCrm";
 
 /** Settings (Admin / Super admin) — staff, structure, PM assignment, rules, client accounts. */
 export default function Settings() {
+  const run = useAction();
   const { modal } = App.useApp();
-  const full = useSelector(selectFullData);
-  const pms = useSelector(selectPms);
+  const full = useFullData();
+  const pms = usePms();
   const isSuper = useSelector(selectRole) === "SuperAdmin";
   const [tab, setTab] = useState("staff");
   const staff = full.staff || [];
@@ -36,7 +31,7 @@ export default function Settings() {
       okText: "Reset",
       okButtonProps: { className: "btn-pill tone-danger" },
       cancelButtonProps: { className: "btn-pill tone-white" },
-      onOk: () => resetDemo(),
+      onOk: () => run(resetDemo),
     });
 
   return (
@@ -49,7 +44,7 @@ export default function Settings() {
       </div>
 
       <div className="row row--wrap gap-6">
-        <ChipGroup options={TABS} value={tab} onChange={setTab} />
+        <ChipGroup options={SETTINGS_TABS} value={tab} onChange={setTab} />
         <PillButton size="xxs" dangerText className="ml-auto" onClick={confirmReset}>Reset demo data</PillButton>
       </div>
 

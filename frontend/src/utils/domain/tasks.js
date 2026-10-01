@@ -1,4 +1,4 @@
-import { BACK, FRONT, OPS, TERMINAL, TRANS } from "../../constants/crm";
+import { BACK, FRONT, OPS, TERMINAL, TRANS } from "../../data";
 
 export const isDone = (t) => TERMINAL.includes(t.status);
 

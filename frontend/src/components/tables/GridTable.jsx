@@ -1,4 +1,4 @@
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
 
 /**
  * Card-style "table" made of CSS-grid rows where each row is one clickable

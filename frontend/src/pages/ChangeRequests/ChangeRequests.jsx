@@ -3,21 +3,22 @@ import { CrEmailToggle, CrNextButton } from "../../components/cards/CrActions";
 import ChipGroup from "../../components/common/ChipGroup";
 import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
-import { CR_STEPS } from "../../constants/crm";
-import { useProjectFilter } from "./useProjectFilter";
+import { CR_STEPS } from "../../data";
+import { useProjectFilter } from "../../utils/helpers/useProjectFilter";
 import { useDispatch, useSelector } from "react-redux";
-import { selectData, selectRole, selectStrict } from "../../redux/selectors";
+import { selectRole } from "../../redux/selectors";
 import { modalOpened } from "../../redux/slices/uiSlice";
 import { roleTrack, taskTrack } from "../../utils/domain/tasks";
 import { mapCr } from "../../utils/domain/views";
+import { useData, useStrict } from "../../app/useCrm";
 
 /** Change request register (SOP §8): Raised → Documented → Estimated → Quoted → Approved. */
 export default function ChangeRequests() {
   const dispatch = useDispatch();
-  const data = useSelector(selectData);
+  const data = useData();
   const role = useSelector(selectRole);
-  const strict = useSelector(selectStrict);
-  const { filter, setFilter, options, matches, selectedProjectId } = useProjectFilter();
+  const strict = useStrict();
+  const { filter, setFilter, options, matches, selectedProjectId } = useProjectFilter(data.projects);
 
   const rows = useMemo(() => {
     const track = roleTrack(role);

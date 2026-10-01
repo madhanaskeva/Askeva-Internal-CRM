@@ -3,7 +3,7 @@ import { Search } from "lucide-react";
 import Card from "../../../components/common/Card";
 import ChipGroup from "../../../components/common/ChipGroup";
 import PillButton from "../../../components/common/PillButton";
-import { QA_ROLE_FILTERS } from "../../../utils/domain/qa";
+import { QA_ROLE_FILTERS } from "../../../data";
 
 /**
  * "Filter & Search QA" bar. The input is a draft; the search applies on Enter

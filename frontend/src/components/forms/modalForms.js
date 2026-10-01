@@ -2,8 +2,8 @@
 // Each kind: { title, submit, initial(ctx), fields(ctx, form), note?(ctx) }
 //   ctx = { role, data, fullData, extra, strict, modal }
 // Field: { key, label, kind: text|number|date|select|area, placeholder?, options? } or { heading }.
-import { ROLE_OPTIONS } from "../constants/crm";
-import { TODAY, addDays } from "../utils/date";
+import { ROLE_OPTIONS } from "../../data";
+import { TODAY, addDays } from "../../utils/helpers/date";
 
 const opts = (a) => a.map((v) => ({ value: v, label: v }));
 const H = (heading) => ({ heading });

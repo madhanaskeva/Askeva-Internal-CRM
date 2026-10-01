@@ -1,168 +1,103 @@
 // Task + bug workflow rules — ported from moveTask / forceClose / toggleBlock /
 // reassign / acceptTask / declineTask / handOver / ackHandover / moveBug.
-// Each thunk validates against the current role, toasts the reason when
-// refused (returning false), otherwise dispatches the crm reducer.
-import { BUG_FLOW, MANAGERS, TRANS, TS_LABEL } from "../../constants/crm";
+// Each action validates against the current role and returns a result
+// (see ./context.js); on success it writes through taskUtils / bugUtils.
+import { BUG_FLOW, MANAGERS, TRANS, TS_LABEL } from "../../data";
+import { getBugById, hasOpenBugs, moveBugStatus } from "../entities/bugUtils";
 import { canMove, needsAccept, roleFor } from "../domain/tasks";
-import { selectStrict } from "../../redux/selectors";
-import { crmActions } from "../../redux/slices/crmSlice";
-import { actionNoteChanged, modalOpened, taskClosed } from "../../redux/slices/uiSlice";
-import { dispatch, getState, makeCtx, toast } from "./context";
+import { isStrict } from "../entities/ruleUtils";
+import {
+  acceptTaskRecord, acknowledgeHandover, declineTaskRecord, forceCloseTaskRecord, getTaskById, handOverTaskRecord,
+  moveTaskStatus, reassignTaskRecord, toggleTaskBlock,
+} from "../entities/taskUtils";
+import { done, refuse } from "./context";
 
-const getTask = (state, id) => state.crm.tasks.find((t) => t.id === id);
-const clearNote = () => actionNoteChanged("");
-
-export const moveTask = (taskId, to, note = "") => {
-  const state = getState();
-  const role = state.session.role;
-  const t = getTask(state, taskId);
+export function moveTask(ctx, taskId, to, note = "") {
+  const role = ctx.role;
+  const t = getTaskById(taskId);
   if (!canMove(role, t, to)) {
     const allowed = ((TRANS[t.status] || []).find(([s]) => s === to) || [[], []])[1].join(", ") || "nobody";
-    dispatch(toast(`${role} cannot move "${TS_LABEL[t.status]}" → "${TS_LABEL[to]}". Allowed: ${allowed}.`));
-    return false;
+    return refuse(`${role} cannot move "${TS_LABEL[t.status]}" → "${TS_LABEL[to]}". Allowed: ${allowed}.`);
   }
-  if (to === "doing" && needsAccept(t) && t.acceptance === "pending") {
-    dispatch(toast("Accept the task first — it is still waiting in the Inbox."));
-    return false;
-  }
-  if (t.assignee === "Unassigned") {
-    dispatch(toast("Task is unassigned (declined). PC must assign a developer first."));
-    return false;
-  }
-  if (to === "passed" && state.crm.bugs.some((b) => b.taskId === t.id && b.status !== "Verified")) {
-    dispatch(toast("Cannot pass: open bugs on this task must be Verified first."));
-    return false;
-  }
+  if (to === "doing" && needsAccept(t) && t.acceptance === "pending") return refuse("Accept the task first — it is still waiting in the Inbox.");
+  if (t.assignee === "Unassigned") return refuse("Task is unassigned (declined). PC must assign a developer first.");
+  if (to === "passed" && hasOpenBugs(t.id)) return refuse("Cannot pass: open bugs on this task must be Verified first.");
   // Failing a task always goes through the "raise bug" form.
-  if (to === "failed") {
-    dispatch(modalOpened({ kind: "bug", extra: { taskId: t.id, projectId: t.projectId, assignee: t.assignee } }));
-    return false;
-  }
-  dispatch(crmActions.taskMoved({ ctx: makeCtx(state), taskId, to, note, flowRole: roleFor(role, t) }));
-  dispatch(clearNote());
-  return true;
-};
+  if (to === "failed") return refuse(undefined, { openModal: { kind: "bug", extra: { taskId: t.id, projectId: t.projectId, assignee: t.assignee } } });
+  moveTaskStatus(ctx, { taskId, to, note, flowRole: roleFor(role, t) });
+  return done({ clearNote: true });
+}
 
-export const forceCloseTask = (taskId) => {
-  const state = getState();
-  if (selectStrict(state)) {
-    dispatch(toast("strictGates is on — a task can only be Closed after Tester Passed."));
-    return;
-  }
-  const t = getTask(state, taskId);
-  dispatch(crmActions.taskForceClosed({ ctx: makeCtx(state), taskId, note: state.ui.actionNote, flowRole: roleFor(state.session.role, t) }));
-  dispatch(clearNote());
-};
+export function forceCloseTask(ctx, taskId) {
+  if (isStrict()) return refuse("strictGates is on — a task can only be Closed after Tester Passed.");
+  forceCloseTaskRecord(ctx, { taskId, note: ctx.note, flowRole: roleFor(ctx.role, getTaskById(taskId)) });
+  return done({ clearNote: true });
+}
 
-export const toggleBlock = (taskId) => {
-  const state = getState();
-  const t = getTask(state, taskId);
-  const note = (state.ui.actionNote || "").trim();
-  if (!t.blocked && !note) {
-    dispatch(toast("A reason is mandatory to block a task."));
-    return;
-  }
-  dispatch(crmActions.taskBlockToggled({ ctx: makeCtx(state), taskId, note, flowRole: roleFor(state.session.role, t) }));
-  dispatch(clearNote());
-};
+export function toggleBlock(ctx, taskId) {
+  const t = getTaskById(taskId);
+  const note = (ctx.note || "").trim();
+  if (!t.blocked && !note) return refuse("A reason is mandatory to block a task.");
+  toggleTaskBlock(ctx, { taskId, note, flowRole: roleFor(ctx.role, t) });
+  return done({ clearNote: true });
+}
 
-export const reassignTask = (taskId, to) => {
-  const state = getState();
-  if (!MANAGERS.includes(state.session.role)) {
-    dispatch(toast("Only the task Owner (PC) or PM can change the assignee. Ask the PC."));
-    return;
-  }
-  const t = getTask(state, taskId);
-  if (!to || to === t.assignee) return;
-  dispatch(crmActions.taskReassigned({ ctx: makeCtx(state), taskId, to }));
-};
+export function reassignTask(ctx, taskId, to) {
+  if (!MANAGERS.includes(ctx.role)) return refuse("Only the task Owner (PC) or PM can change the assignee. Ask the PC.");
+  const t = getTaskById(taskId);
+  if (!to || to === t.assignee) return refuse();
+  reassignTaskRecord(ctx, { taskId, to });
+  return done();
+}
 
-export const acceptTask = (taskId) => {
-  const state = getState();
-  const t = getTask(state, taskId);
-  if (roleFor(state.session.role, t) !== "Assignee") {
-    dispatch(toast("Only the assigned developer can accept this task."));
-    return;
-  }
-  dispatch(crmActions.taskAccepted({ ctx: makeCtx(state), taskId, note: state.ui.actionNote }));
-  dispatch(clearNote());
-  dispatch(toast("Accepted. Due date stays as set by the PC."));
-};
+export function acceptTask(ctx, taskId) {
+  if (roleFor(ctx.role, getTaskById(taskId)) !== "Assignee") return refuse("Only the assigned developer can accept this task.");
+  acceptTaskRecord(ctx, { taskId, note: ctx.note });
+  return done({ clearNote: true, message: "Accepted. Due date stays as set by the PC." });
+}
 
-export const declineTask = (taskId) => {
-  const state = getState();
-  const t = getTask(state, taskId);
-  if (roleFor(state.session.role, t) !== "Assignee") {
-    dispatch(toast("Only the assigned developer can decline this task."));
-    return;
-  }
-  const note = (state.ui.actionNote || "").trim();
-  if (!note) {
-    dispatch(toast("A reason is mandatory to decline a task."));
-    return;
-  }
-  dispatch(crmActions.taskDeclined({ ctx: makeCtx(state), taskId, note }));
-  dispatch(clearNote());
-  dispatch(taskClosed());
-  dispatch(toast("Declined. Task returned to the PC as Unassigned."));
-};
+export function declineTask(ctx, taskId) {
+  if (roleFor(ctx.role, getTaskById(taskId)) !== "Assignee") return refuse("Only the assigned developer can decline this task.");
+  const note = (ctx.note || "").trim();
+  if (!note) return refuse("A reason is mandatory to decline a task.");
+  declineTaskRecord(ctx, { taskId, note });
+  return done({ clearNote: true, closeTask: true, message: "Declined. Task returned to the PC as Unassigned." });
+}
 
-export const handOverTask = (taskId, to) => {
-  const state = getState();
-  const t = getTask(state, taskId);
-  if (roleFor(state.session.role, t) !== "Assignee") {
-    dispatch(toast("Only the current assignee can hand over a task."));
-    return;
-  }
-  if (!to || to === t.assignee) return;
-  const note = (state.ui.actionNote || "").trim();
-  if (!note) {
-    dispatch(toast("Add a note explaining the handover first."));
-    return;
-  }
-  dispatch(crmActions.taskHandedOver({ ctx: makeCtx(state), taskId, to, note }));
-  dispatch(clearNote());
-  dispatch(toast(`Handed over to ${to}. PC must acknowledge; ${to} must accept.`));
-};
+export function handOverTask(ctx, taskId, to) {
+  const t = getTaskById(taskId);
+  if (roleFor(ctx.role, t) !== "Assignee") return refuse("Only the current assignee can hand over a task.");
+  if (!to || to === t.assignee) return refuse();
+  const note = (ctx.note || "").trim();
+  if (!note) return refuse("Add a note explaining the handover first.");
+  handOverTaskRecord(ctx, { taskId, to, note });
+  return done({ clearNote: true, message: `Handed over to ${to}. PC must acknowledge; ${to} must accept.` });
+}
 
-export const ackHandover = (taskId) => {
-  const state = getState();
-  if (!MANAGERS.includes(state.session.role)) {
-    dispatch(toast("Only the PC (or PM) acknowledges handovers."));
-    return;
-  }
-  dispatch(crmActions.handoverAcknowledged({ ctx: makeCtx(state), taskId }));
-};
+export function ackHandover(ctx, taskId) {
+  if (!MANAGERS.includes(ctx.role)) return refuse("Only the PC (or PM) acknowledges handovers.");
+  acknowledgeHandover(ctx, { taskId });
+  return done();
+}
 
 /**
  * Bug lifecycle: Open → Fixed (dev) → Retest (tester) → Verified / Reopened (tester);
  * dev may Reject (reason required) → tester accepts (NotABug) or reopens.
  */
-export const moveBug = (bugId, to) => {
-  const state = getState();
-  const note = state.ui.actionNote || "";
-  const r0 = state.session.role;
+export function moveBug(ctx, bugId, to) {
+  const note = ctx.note || "";
+  const r0 = ctx.role;
   const r = r0 === "Frontend" || r0 === "Backend" ? "Developer" : r0;
-  const b = state.crm.bugs.find((x) => x.id === bugId);
+  const b = getBugById(bugId);
   const rule = BUG_FLOW[b.status];
   if (to === "Verified" || to === "Reopened" || to === "NotABug") {
-    if (!["Tester", "PM"].includes(r)) {
-      dispatch(toast("Only the Tester can verify, reopen or close a bug."));
-      return;
-    }
+    if (!["Tester", "PM"].includes(r)) return refuse("Only the Tester can verify, reopen or close a bug.");
   } else if (to === "Rejected") {
-    if (!["Developer", "PM"].includes(r)) {
-      dispatch(toast("Only the Developer can reject a bug."));
-      return;
-    }
-    if (!note.trim()) {
-      dispatch(toast("A reason is mandatory to reject a bug as not-a-bug."));
-      return;
-    }
+    if (!["Developer", "PM"].includes(r)) return refuse("Only the Developer can reject a bug.");
+    if (!note.trim()) return refuse("A reason is mandatory to reject a bug as not-a-bug.");
   } else if (!rule || rule[0] !== to || !rule[1].includes(r)) {
-    dispatch(toast(`${r0} cannot move bug ${b.status} → ${to}.`));
-    return;
+    return refuse(`${r0} cannot move bug ${b.status} → ${to}.`);
   }
-  dispatch(crmActions.bugMoved({ ctx: makeCtx(state), bugId, to, note }));
-  dispatch(clearNote());
-};
+  moveBugStatus(ctx, { bugId, to, note });
+  return done({ clearNote: true });
+}

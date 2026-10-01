@@ -1,28 +1,12 @@
 // QA workspace + QA analytics — port of the original QA blocks of renderVals
 // (search/role filter, bugRow, qa lists, qaStats, qaSeverity, qaByDev, qaByProject,
 // qaTimeline, qaTaskRows, qaRetestRows, qaNext, buildQa, teamQa).
-import { BACK, FRONT, OPS, TS_LABEL } from "../../constants/crm";
-import { TODAY, addDays, daysBetween, fmt, fmtDur, fmtTime, minsBetween } from "../date";
-import { avg } from "../format";
+import { BACK, FRONT, OPS, TS_LABEL } from "../../data";
+import { TODAY, addDays, daysBetween, fmt, fmtDur, fmtTime, minsBetween } from "../helpers/date";
+import { avg } from "../helpers/format";
 import { DEV_TRACK, isDone, trackOf } from "./tasks";
 import { bugStatusTone, severityTone } from "./tones";
 import { mapTask } from "./views";
-
-export const QA_PERIODS = [
-  { value: "today", label: "Today" },
-  { value: "yesterday", label: "Yesterday" },
-  { value: "week", label: "This week" },
-  { value: "month", label: "This month" },
-];
-
-export const QA_ROLE_FILTERS = [
-  { value: "all", label: "All roles" },
-  { value: "pc", label: "Project Coordinator" },
-  { value: "ui", label: "UI Developers" },
-  { value: "backend", label: "Backend Developers" },
-  { value: "tester", label: "Testers" },
-  { value: "dev", label: "Developers" },
-];
 
 const projectOf = (data, id) => data.projects.find((p) => p.id === id) || {};
 

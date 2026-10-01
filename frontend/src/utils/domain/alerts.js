@@ -2,8 +2,8 @@
 // Instead of closures, each alert carries a serialisable `target`:
 //   { view, projectId? }  → navigate to a page
 //   { taskId, view? }     → open the task drawer (optionally after navigating)
-import { TODAY, daysBetween, fmt } from "../date";
-import { inr } from "../format";
+import { TODAY, daysBetween, fmt } from "../helpers/date";
+import { inr } from "../helpers/format";
 import { isDone } from "./tasks";
 
 const L1 = { level: "L1 · PC", tone: "paper" };

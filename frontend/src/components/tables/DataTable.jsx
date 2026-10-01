@@ -1,5 +1,5 @@
 import { Table } from "antd";
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
 
 /**
  * Ant Design Table in the Askeva style (ink header, compact rows, horizontal

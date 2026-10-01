@@ -1,18 +1,12 @@
 // Team / per-person record — ported from the original "team / per-person detail"
 // and the `people` list of renderVals. Pure functions; colours are tone/text keys.
-import { TS_LABEL } from "../../constants/crm";
-import { TODAY, addDays, daysBetween, fmt } from "../date";
-import { avg } from "../format";
+import { PERSON_RANGES, TS_LABEL } from "../../data";
+import { TODAY, addDays, daysBetween, fmt } from "../helpers/date";
+import { avg } from "../helpers/format";
 import { teamOf } from "./finance";
 import { isDone } from "./tasks";
 import { bugStatusTone } from "./tones";
 import { mapTask } from "./views";
-
-export const PERSON_RANGES = [
-  { value: "today", label: "Today" },
-  { value: "week", label: "This week" },
-  { value: "all", label: "All time" },
-];
 
 /** Active staff excluding Admin / Project Manager — the people audited and shown on Team. */
 export const teamPeople = (data) =>

@@ -2,7 +2,7 @@ import { Spin } from "antd";
 import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import MainLayout from "../components/layout/MainLayout";
-import { LOGIN_PATH, VIEW_PATHS } from "../constants/routes";
+import { LOGIN_PATH, VIEW_PATHS } from "../data";
 import Login from "../pages/Login/Login";
 import { HomeRedirect, ProtectedRoute, RequireView } from "./ProtectedRoute";
 

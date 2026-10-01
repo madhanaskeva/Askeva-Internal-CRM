@@ -1,7 +1,6 @@
 import Card from "../../components/common/Card";
-import { cx } from "../../utils/cx";
-
-const DEPTH_TONE = ["ink", "lime", "paper", "white"];
+import { cx } from "../../utils/helpers/cx";
+import { STRUCTURE_DEPTH_TONES } from "../../data";
 
 /** Flatten the active reporting tree (depth-first) — port of the original `tree`. */
 function buildTree(staff, projects) {
@@ -13,7 +12,7 @@ function buildTree(staff, projects) {
       name: s.name,
       role: s.role,
       depth: Math.min(depth, 4),
-      tone: DEPTH_TONE[Math.min(depth, 3)],
+      tone: STRUCTURE_DEPTH_TONES[Math.min(depth, 3)],
       projects: s.role === "Project Manager" ? projects.filter((p) => p.pmId === s.id).map((p) => p.code).join(", ") || "no projects" : "",
     });
     kids(s.id).forEach((c) => walk(c, depth + 1));

@@ -4,13 +4,13 @@ import ChipGroup from "../../components/common/ChipGroup";
 import StatCard from "../../components/common/StatCard";
 import DataTable from "../../components/tables/DataTable";
 import { useNavigate } from "react-router-dom";
-import { pathFor } from "../../constants/routes";
-import { useSelector } from "react-redux";
-import { selectData, selectFinMap, selectPortfolio } from "../../redux/selectors";
-import { cx } from "../../utils/cx";
-import { PL_PERIODS, computeProfitLoss } from "../../utils/domain/profitLoss";
-import { lPct, wPct } from "../../utils/pct";
+import { pathFor } from "../../utils/helpers/routes";
+import { cx } from "../../utils/helpers/cx";
+import { computeProfitLoss } from "../../utils/domain/profitLoss";
+import { lPct, wPct } from "../../utils/helpers/pct";
 import { CostBreakdown, MarginTrend, ReceivablesAgeing, RevenueBars } from "./ProfitLossCharts";
+import { PL_PERIODS } from "../../data";
+import { useData, useFinMap, usePortfolio } from "../../app/useCrm";
 
 const num = (key, colorKey, bold) => ({
   title: "",
@@ -23,9 +23,9 @@ const titled = (title, col) => ({ ...col, title });
 /** Profit & loss (Admin / Super admin): period P&L, forecast at completion, trends, ageing, LTV, people. */
 export default function ProfitLoss() {
   const navigate = useNavigate();
-  const data = useSelector(selectData);
-  const FIN = useSelector(selectFinMap);
-  const port = useSelector(selectPortfolio);
+  const data = useData();
+  const FIN = useFinMap();
+  const port = usePortfolio();
   const [period, setPeriod] = useState("month");
   const pl = useMemo(() => computeProfitLoss(data, FIN, port, period), [data, FIN, port, period]);
 

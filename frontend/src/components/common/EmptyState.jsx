@@ -1,4 +1,4 @@
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
 
 /** Muted one-line placeholder for empty lists (the original used plain muted text). */
 export default function EmptyState({ children, className }) {

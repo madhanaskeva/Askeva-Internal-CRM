@@ -7,10 +7,12 @@ import GridTable from "../../../components/tables/GridTable";
 import { useDispatch } from "react-redux";
 import { taskOpened } from "../../../redux/slices/uiSlice";
 import { moveBug } from "../../../utils/actions/taskActions";
+import { useAction } from "../../../app/useCrm";
 
 /** Tester "Queue · retest · decisions" tab. `q` is buildQaQueue(...). */
 export default function QaQueue({ q }) {
   const dispatch = useDispatch();
+  const run = useAction();
   const open = (taskId) => dispatch(taskOpened(taskId));
 
   return (
@@ -49,7 +51,7 @@ export default function QaQueue({ q }) {
               <div className="fw-600 text-ink fs-12-5">{b.desc}</div>
               <div className="meta">fixed {b.fixed} by {b.developer}</div>
               <div className="row gap-6">
-                <PillButton size="xs" tone="lime" onClick={() => moveBug(b.id, "Retest")}>Start retest</PillButton>
+                <PillButton size="xs" tone="lime" onClick={() => run(moveBug, b.id, "Retest")}>Start retest</PillButton>
                 <PillButton size="xs" onClick={() => open(b.taskId)}>Open task</PillButton>
               </div>
             </div>
@@ -59,8 +61,8 @@ export default function QaQueue({ q }) {
               <div className="font-mono fs-10 fw-700 text-ink">{b.id} · REJECTED BY DEVELOPER</div>
               <div className="fw-600 text-ink fs-12-5">{b.desc}</div>
               <div className="row gap-6">
-                <PillButton size="xs" tone="ink" onClick={() => moveBug(b.id, "NotABug")}>Accept · not a bug</PillButton>
-                <PillButton size="xs" tone="danger" onClick={() => moveBug(b.id, "Reopened")}>Reopen</PillButton>
+                <PillButton size="xs" tone="ink" onClick={() => run(moveBug, b.id, "NotABug")}>Accept · not a bug</PillButton>
+                <PillButton size="xs" tone="danger" onClick={() => run(moveBug, b.id, "Reopened")}>Reopen</PillButton>
               </div>
             </div>
           ))}

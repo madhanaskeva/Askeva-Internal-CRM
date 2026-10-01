@@ -1,9 +1,9 @@
 import { Button, Input } from "antd";
 import { useState } from "react";
-import { crmActions } from "../../redux/slices/crmSlice";
-import { withCtx } from "../../utils/actions/context";
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
 import CheckToggle from "../common/CheckToggle";
+import { useAction } from "../../app/useCrm";
+import { commentFollowup, toggleFollowup, toggleFollowupCourt } from "../../utils/entities/followupUtils";
 
 /**
  * Follow-up row with done toggle, optional court (ball-with-us) toggle and an outcome log.
@@ -13,13 +13,14 @@ import CheckToggle from "../common/CheckToggle";
  *   minimal — dashboard "today" list (no log input)
  */
 export default function FollowupItem({ followup: f, variant = "board" }) {
+  const run = useAction();
   const [draft, setDraft] = useState("");
-  const toggle = () => withCtx(crmActions.followupToggled, { followupId: f.id });
-  const toggleCourt = () => withCtx(crmActions.followupCourtToggled, { followupId: f.id });
+  const toggle = () => run(toggleFollowup, { followupId: f.id });
+  const toggleCourt = () => run(toggleFollowupCourt, { followupId: f.id });
   const addComment = () => {
     const text = draft.trim();
     if (!text) return;
-    withCtx(crmActions.followupCommented, { followupId: f.id, text });
+    run(commentFollowup, { followupId: f.id, text });
     setDraft("");
   };
 

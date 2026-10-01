@@ -5,10 +5,11 @@ import Card from "../../components/common/Card";
 import Pill from "../../components/common/Pill";
 import SectionLabel from "../../components/common/SectionLabel";
 import { useDispatch, useSelector } from "react-redux";
-import { selectData, selectHealthMap, selectRole } from "../../redux/selectors";
+import { selectRole } from "../../redux/selectors";
 import { taskOpened } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
 import { buildDevWork } from "../../utils/domain/devWork";
+import { useData, useHealthMap } from "../../app/useCrm";
 
 /** Clickable work item inside a My-work column. */
 function WorkItem({ taskId, tone = "white", head, badge, title, sub, subClass = "text-muted" }) {
@@ -29,9 +30,9 @@ function WorkItem({ taskId, tone = "white", head, badge, title, sub, subClass = 
 
 /** Developer home: inbox strip, today's work, rework & bugs, waiting for test, blocked, references. */
 export default function MyWork() {
-  const data = useSelector(selectData);
+  const data = useData();
   const role = useSelector(selectRole);
-  const H = useSelector(selectHealthMap);
+  const H = useHealthMap();
   const mw = useMemo(() => buildDevWork(data, role, H), [data, role, H]);
 
   return (

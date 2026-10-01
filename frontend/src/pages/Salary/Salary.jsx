@@ -5,17 +5,19 @@ import PillButton from "../../components/common/PillButton";
 import StatCard from "../../components/common/StatCard";
 import DataTable from "../../components/tables/DataTable";
 import { useDispatch } from "react-redux";
-import { crmActions } from "../../redux/slices/crmSlice";
 import { modalOpened } from "../../redux/slices/uiSlice";
 import { runPayroll } from "../../utils/actions/adminActions";
-import { withCtx } from "../../utils/actions/context";
-import { cx } from "../../utils/cx";
-import { TODAY, monthLabel, shiftMonth } from "../../utils/date";
+import { cx } from "../../utils/helpers/cx";
+import { TODAY, monthLabel, shiftMonth } from "../../utils/helpers/date";
 import { useSalary } from "./useSalary";
+import { useAction } from "../../app/useCrm";
+import { toggleStaffStatus } from "../../utils/entities/staffUtils";
+import { togglePayslipPaid } from "../../utils/entities/payrollUtils";
 
 /** Salary & payroll — employees, monthly payslips and project cost allocation. */
 export default function Salary() {
   const dispatch = useDispatch();
+  const run = useAction();
   const [payMonth, setPayMonth] = useState(TODAY.slice(0, 7));
   const { rows, stats, history, payrollRun, gross, ded, net } = useSalary(payMonth);
 
@@ -29,7 +31,7 @@ export default function Salary() {
             type="button"
             title="Toggle active"
             className={cx("sal-status-dot", s.active ? "tone-green" : "tone-white")}
-            onClick={() => withCtx(crmActions.staffStatusToggled, { staffId: s.id })}
+            onClick={() => run(toggleStaffStatus, { staffId: s.id })}
           />
           <div className="flex-1">
             <div className="fw-700 text-ink">{s.name}</div>
@@ -93,7 +95,7 @@ export default function Salary() {
           <button
             type="button"
             className={cx("pill pill--xs pill-btn", `tone-${s.payTone}`)}
-            onClick={() => s.entry && withCtx(crmActions.payslipPaidToggled, { entryId: s.entry.id })}
+            onClick={() => s.entry && run(togglePayslipPaid, { entryId: s.entry.id })}
           >
             {s.payStatus}
           </button>
@@ -128,7 +130,7 @@ export default function Salary() {
                 Gross <strong className="text-ink">{gross}</strong> · Deductions <strong className="text-ink">{ded}</strong> · Net <strong className="text-ink">{net}</strong>
               </span>
             )}
-            <PillButton size="sm" tone="lime" shadow onClick={() => runPayroll(payMonth)}>Run payroll for month</PillButton>
+            <PillButton size="sm" tone="lime" shadow onClick={() => run(runPayroll, payMonth)}>Run payroll for month</PillButton>
             <PillButton size="sm" tone="ink" className="btn-shadow-green" onClick={() => dispatch(modalOpened({ kind: "staff" }))}>+ Employee</PillButton>
           </div>
         </div>

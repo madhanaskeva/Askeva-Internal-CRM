@@ -1,29 +1,36 @@
-// Plain action helpers (no thunks): each function reads the current state and
-// dispatches crm reducers straight on the store. Persistence to localStorage is
-// handled by the store subscription (see redux/store.js → utils/storage).
-import { store } from "../../redux/store";
-import { toastShown } from "../../redux/slices/uiSlice";
-import { TODAY, nowTime } from "../date";
+// Shared pieces for the workflow actions (taskActions, releaseActions, …).
+//
+// Actions are plain functions: they receive a `ctx`, check the business rules,
+// write through the entity utils (→ localStorage) and return a result object.
+// They never touch Redux; the caller decides what to do with the result
+// (show `message` as a toast, clear the note, open a modal…).
+import { TODAY, nowTime } from "../helpers/date";
 import { actorName } from "../domain/tasks";
+import { getProjects } from "../entities/projectUtils";
+import { getStaff } from "../entities/staffUtils";
 
-export const dispatch = (action) => store.dispatch(action);
-export const getState = () => store.getState();
-
-/** Build the `ctx` every crm reducer expects: who did it, as which role, from which view, when. */
-export const makeCtx = (state) => ({
-  actor: actorName(state.session, state.crm),
-  role: state.session.role,
-  view: state.ui.currentView,
+/**
+ * Build the `ctx` every change expects: who did it, as which role, from which
+ * view, when — plus the shared action note typed in the UI.
+ * @param {{session: {role, pmId, clientProject}, view: string, note?: string}} who
+ */
+export const makeCtx = ({ session, view, note = "" }) => ({
+  actor: actorName(session, { staff: getStaff(), projects: getProjects() }),
+  role: session.role,
+  view,
+  note,
   date: TODAY,
   time: nowTime(),
   ts: Date.now(),
 });
 
 /**
- * Dispatch a crm action with `ctx` injected. Use for mutations that need no
- * permission check:  withCtx(crmActions.followupToggled, { followupId })
+ * Action result.
+ *   ok         — the change was applied
+ *   message    — text to show the user (toast)
+ *   clearNote  — reset the shared action note
+ *   openModal  — { kind, extra } form modal to open
+ *   closeTask  — close the task drawer
  */
-export const withCtx = (actionCreator, payload = {}) =>
-  dispatch(actionCreator({ ...payload, ctx: makeCtx(getState()) }));
-
-export const toast = toastShown;
+export const done = (extra = {}) => ({ ok: true, ...extra });
+export const refuse = (message, extra = {}) => ({ ok: false, message, ...extra });

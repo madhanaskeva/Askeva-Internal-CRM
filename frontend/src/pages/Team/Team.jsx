@@ -5,11 +5,12 @@ import ChipGroup from "../../components/common/ChipGroup";
 import EmptyState from "../../components/common/EmptyState";
 import Pill from "../../components/common/Pill";
 import StatCard from "../../components/common/StatCard";
-import { useDispatch, useSelector } from "react-redux";
-import { selectData } from "../../redux/selectors";
+import { useDispatch } from "react-redux";
 import { taskOpened } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/cx";
-import { PERSON_RANGES, personDetail, resolvePerson, resolveRange, teamPeople } from "../../utils/domain/team";
+import { cx } from "../../utils/helpers/cx";
+import { personDetail, resolvePerson, resolveRange, teamPeople } from "../../utils/domain/team";
+import { PERSON_RANGES } from "../../data";
+import { useData } from "../../app/useCrm";
 
 const Section = ({ title, children }) => (
   <Card className="stack gap-8 team-card">
@@ -21,7 +22,7 @@ const Section = ({ title, children }) => (
 /** Per-person record: tasks, tests, bugs and full history (person + range live in the URL). */
 export default function Team() {
   const dispatch = useDispatch();
-  const data = useSelector(selectData);
+  const data = useData();
   const [params, setParams] = useSearchParams();
   const people = useMemo(() => teamPeople(data), [data]);
   const name = resolvePerson(people, params.get("person"));

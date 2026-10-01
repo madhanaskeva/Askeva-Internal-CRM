@@ -1,15 +1,13 @@
 import { useMemo } from "react";
-import { useSelector } from "react-redux";
-import { selectData } from "../../redux/selectors";
-import { fmt, monthLabel } from "../../utils/date";
-import { inr } from "../../utils/format";
+import { fmt, monthLabel } from "../../utils/helpers/date";
+import { inr } from "../../utils/helpers/format";
 import { staffRate } from "../../utils/domain/finance";
-
-const EFFORT_KEYS = ["ui", "backend", "tester", "pc"];
+import { EFFORT_KEYS } from "../../data";
+import { useData } from "../../app/useCrm";
 
 /** Salary & payroll view-models for one month — port of the original salary section. */
 export function useSalary(payMonth) {
-  const data = useSelector(selectData);
+  const data = useData();
 
   return useMemo(() => {
     const staff = data.staff || [];

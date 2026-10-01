@@ -1,14 +1,19 @@
 // Form-modal submission — port of the original `submit()` / `saveStaff()`.
-// Returns an error message (shown inside the modal) or null on success.
-import { STAGES } from "../../constants/crm";
-import { defaultMilestones } from "../../data/seed";
-import { TODAY, addDays, daysBetween } from "../date";
-import { parseAmount, uid } from "../format";
+import { STAGES } from "../../data";
+import { defaultMilestones } from "../storage/seed";
+import { TODAY, addDays, daysBetween } from "../helpers/date";
+import { parseAmount, uid } from "../helpers/format";
 import { DEV_TRACK, trackOf } from "../domain/tasks";
-import { selectStrict } from "../../redux/selectors";
-import { crmActions } from "../../redux/slices/crmSlice";
-import { modalClosed } from "../../redux/slices/uiSlice";
-import { dispatch, getState, makeCtx, toast } from "./context";
+import { addChangeRequest, getChangeRequestById } from "../entities/changeRequestUtils";
+import { addCommunication } from "../entities/communicationUtils";
+import { addFollowup } from "../entities/followupUtils";
+import { adjustPayslip } from "../entities/payrollUtils";
+import { addExpense, addInvoice, addProject, getProjectById, logEffort, logOverrun, requestRevision } from "../entities/projectUtils";
+import { isStrict } from "../entities/ruleUtils";
+import { saveStaff } from "../entities/staffUtils";
+import { addTask } from "../entities/taskUtils";
+import { raiseBug } from "../entities/bugUtils";
+import { done } from "./context";
 
 const blank = (v) => !String(v ?? "").trim();
 /** First failing [key, message] pair, or null. */
@@ -48,18 +53,18 @@ function buildProject(form) {
   };
 }
 
-/** Handlers per modal kind: (form, extra, api) → error string | undefined */
+/** Handlers per modal kind: (form, extra, ctx) → error string | { message } | undefined */
 const handlers = {
-  project(form, _extra, { dispatch, ctx }) {
+  project(form, _extra, ctx) {
     const err = requireAll(form, [["client", "Client name is required"], ["spoc", "Client SPOC is required"], ["cost", "Project cost is required"]]);
     if (err) return err;
-    dispatch(crmActions.projectAdded({ ctx, project: buildProject(form) }));
+    addProject(ctx, { project: buildProject(form) });
   },
 
-  task(form, _extra, { dispatch, ctx, state }) {
+  task(form, _extra, ctx) {
     if (blank(form.title)) return "Task title is required";
-    const role = state.session.role;
-    const project = state.crm.projects.find((p) => p.id === form.projectId) || { stage: 0 };
+    const role = ctx.role;
+    const project = getProjectById(form.projectId) || { stage: 0 };
     const needsInbox = DEV_TRACK({ assignee: form.assignee }) && role !== "DevOps";
     const task = {
       id: "t" + uid(), projectId: form.projectId, title: form.title, assignee: form.assignee, track: trackOf({ assignee: form.assignee }), owner: "PC",
@@ -69,90 +74,92 @@ const handlers = {
       ...(needsInbox ? { acceptance: "pending", assignedOn: TODAY, assignedBy: ctx.actor } : {}),
       history: [{ date: TODAY, actor: ctx.actor, role, from: null, to: "todo", note: "Task created · assigned to " + form.assignee }],
     };
-    dispatch(crmActions.taskAdded({ ctx, task }));
-    if (needsInbox) dispatch(toast(form.assignee + " has been notified — task waits in their Inbox for acceptance (same-day rule)."));
+    addTask(ctx, { task });
+    if (needsInbox) return { message: form.assignee + " has been notified — task waits in their Inbox for acceptance (same-day rule)." };
   },
 
-  bug(form, extra, { dispatch, ctx }) {
+  bug(form, extra, ctx) {
     const err = requireAll(form, [["desc", "Describe the bug"], ["evidence", "Evidence is required (screenshot / log reference)"]]);
     if (err) return err;
-    dispatch(crmActions.bugRaised({ ctx, taskId: extra.taskId, projectId: extra.projectId, form }));
+    raiseBug(ctx, { taskId: extra.taskId, projectId: extra.projectId, form });
   },
 
-  followup(form, _extra, { dispatch, ctx }) {
+  followup(form, _extra, ctx) {
     if (blank(form.with)) return "Who is this follow-up with?";
-    dispatch(crmActions.followupAdded({ ctx, followup: { id: "f" + uid(), projectId: form.projectId, type: form.type, with: form.with, channel: form.channel, due: form.due, note: form.note, status: "pending", court: form.court } }));
+    addFollowup(ctx, { followup: { id: "f" + uid(), projectId: form.projectId, type: form.type, with: form.with, channel: form.channel, due: form.due, note: form.note, status: "pending", court: form.court } });
   },
 
-  communication(form, _extra, { dispatch, ctx }) {
+  communication(form, _extra, ctx) {
     const err = requireAll(form, [["recipient", "Recipient / SPOC is required"], ["message", "Message detail is required"]]);
     if (err) return err;
-    dispatch(crmActions.communicationAdded({ ctx, communication: { id: "comm" + uid(), projectId: form.projectId, date: ctx.date, time: ctx.time, channel: form.channel, recipient: form.recipient, type: form.type, message: form.message, court: form.court } }));
+    addCommunication(ctx, { communication: { id: "comm" + uid(), projectId: form.projectId, date: ctx.date, time: ctx.time, channel: form.channel, recipient: form.recipient, type: form.type, message: form.message, court: form.court } });
   },
 
-  expense(form, _extra, { dispatch, ctx }) {
+  expense(form, _extra, ctx) {
     const err = requireAll(form, [["desc", "Describe the expense"], ["amount", "Amount is required"]]);
     if (err) return err;
-    dispatch(crmActions.expenseAdded({ ctx, projectId: form.projectId, expense: { id: "e" + uid(), date: form.date, category: form.category, desc: form.desc, amount: parseAmount(form.amount) } }));
+    addExpense(ctx, { projectId: form.projectId, expense: { id: "e" + uid(), date: form.date, category: form.category, desc: form.desc, amount: parseAmount(form.amount) } });
   },
 
-  invoice(form, _extra, { dispatch, ctx }) {
+  invoice(form, _extra, ctx) {
     const err = requireAll(form, [["label", "Label is required"], ["amount", "Amount is required"]]);
     if (err) return err;
-    dispatch(crmActions.invoiceAdded({ ctx, projectId: form.projectId, invoice: { id: "i" + uid(), date: form.date, label: form.label, amount: parseAmount(form.amount), status: form.status } }));
+    addInvoice(ctx, { projectId: form.projectId, invoice: { id: "i" + uid(), date: form.date, label: form.label, amount: parseAmount(form.amount), status: form.status } });
   },
 
-  effort(form, _extra, { dispatch, ctx, state }) {
-    const cr = form.crId ? state.crm.crs.find((c) => c.id === form.crId) : null;
-    if (cr && cr.status !== "Approved" && selectStrict(state)) {
+  effort(form, _extra, ctx) {
+    const cr = form.crId ? getChangeRequestById(form.crId) : null;
+    if (cr && cr.status !== "Approved" && isStrict()) {
       return `${cr.id} is ${cr.status}, not Approved. No email confirmation = no work. Get the CR approved first.`;
     }
-    dispatch(crmActions.effortLogged({ ctx, projectId: form.projectId, entry: { id: "el" + uid(), role: form.role, days: +form.days || 0, crId: form.crId || null, unapproved: !!(cr && cr.status !== "Approved") } }));
+    logEffort(ctx, { projectId: form.projectId, entry: { id: "el" + uid(), role: form.role, days: +form.days || 0, crId: form.crId || null, unapproved: !!(cr && cr.status !== "Approved") } });
   },
 
-  revise(form, _extra, { dispatch, ctx }) {
+  revise(form, _extra, ctx) {
     const err = requireAll(form, [["to", "New deadline is required"], ["reason", "A reason is mandatory"]]);
     if (err) return err;
-    dispatch(crmActions.revisionRequested({ ctx, projectId: form.projectId, revisionId: "rv" + uid(), form }));
+    requestRevision(ctx, { projectId: form.projectId, revisionId: "rv" + uid(), form });
   },
 
-  overrun(form, _extra, { dispatch, ctx }) {
+  overrun(form, _extra, ctx) {
     if (blank(form.note)) return "Explain the overrun";
-    dispatch(crmActions.overrunLogged({ ctx, projectId: form.projectId, form }));
+    logOverrun(ctx, { projectId: form.projectId, form });
   },
 
-  staff(form, _extra, { dispatch, ctx }) {
+  staff(form, _extra, ctx) {
     const err = requireAll(form, [["name", "Name is required"], ["salary", "Monthly salary is required"]]);
     if (err) return err;
-    dispatch(crmActions.staffSaved({ ctx, newId: "s" + uid(), record: { name: form.name, role: form.role, dept: form.dept, salary: +form.salary || 0, allowances: +form.allowances || 0, workDays: +form.workDays || 22, joined: form.joined } }));
+    saveStaff(ctx, { newId: "s" + uid(), record: { name: form.name, role: form.role, dept: form.dept, salary: +form.salary || 0, allowances: +form.allowances || 0, workDays: +form.workDays || 22, joined: form.joined } });
   },
 
-  staffFull(form, extra, { dispatch, ctx, state }) {
+  staffFull(form, extra, ctx) {
     const err = requireAll(form, [["name", "Name is required"], ["role", "Role is required"]]);
     if (err) return err;
-    if (form.role === "Admin" && state.session.role !== "SuperAdmin") return "Only the Super admin can create or edit Admins.";
+    if (form.role === "Admin" && ctx.role !== "SuperAdmin") return "Only the Super admin can create or edit Admins.";
     const record = {
       name: form.name, role: form.role, dept: form.dept, email: form.email, phone: form.phone, emergency: form.emergency, address: form.address, idNo: form.idNo,
       pan: form.pan, bank: form.bank, salary: +form.salary || 0, allowances: +form.allowances || 0, workDays: +form.workDays || 22, joined: form.joined,
       reportsTo: form.reportsTo || null, notes: form.notes,
     };
-    dispatch(crmActions.staffSaved({ ctx, staffId: extra.staff?.id, newId: "s" + uid(), record }));
+    saveStaff(ctx, { staffId: extra.staff?.id, newId: "s" + uid(), record });
   },
 
-  payAdjust(form, extra, { dispatch, ctx }) {
-    dispatch(crmActions.payslipAdjusted({ ctx, entryId: extra.entry?.id, bonus: +form.bonus || 0, deductions: +form.deductions || 0, note: form.note }));
+  payAdjust(form, extra, ctx) {
+    adjustPayslip(ctx, { entryId: extra.entry?.id, bonus: +form.bonus || 0, deductions: +form.deductions || 0, note: form.note });
   },
 
-  cr(form, _extra, { dispatch, ctx }) {
+  cr(form, _extra, ctx) {
     if (blank(form.title)) return "Describe the request";
-    dispatch(crmActions.crAdded({ ctx, form }));
+    addChangeRequest(ctx, { form });
   },
 };
 
-export const submitModal = (kind, form, extra = {}) => {
-  const state = getState();
-  const error = handlers[kind](form, extra, { dispatch, state, ctx: makeCtx(state) });
-  if (error) return error;
-  dispatch(modalClosed());
-  return null;
-};
+/**
+ * Validate and save a form-modal submission.
+ * Returns { ok: false, error } to show inside the modal, or { ok: true, closeModal, message? }.
+ */
+export function submitModal(ctx, kind, form, extra = {}) {
+  const result = handlers[kind](form, extra, ctx);
+  if (typeof result === "string") return { ok: false, error: result };
+  return done({ closeModal: true, ...(result || {}) });
+}

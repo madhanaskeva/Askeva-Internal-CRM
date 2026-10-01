@@ -3,15 +3,15 @@ import Card from "../../components/common/Card";
 import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
 import { useNavigate } from "react-router-dom";
-import { pathFor } from "../../constants/routes";
+import { pathFor } from "../../utils/helpers/routes";
 import { useSelector } from "react-redux";
-import { selectData, selectMe, selectRole } from "../../redux/selectors";
-import { crmActions } from "../../redux/slices/crmSlice";
-import { withCtx } from "../../utils/actions/context";
-import { cx } from "../../utils/cx";
-import { TODAY, addDays } from "../../utils/date";
+import { selectRole } from "../../redux/selectors";
+import { cx } from "../../utils/helpers/cx";
+import { TODAY, addDays } from "../../utils/helpers/date";
 import { auditDateLabel, auditRows, auditTotals } from "../../utils/domain/audit";
 import { teamPeople } from "../../utils/domain/team";
+import { useAction, useData, useMe } from "../../app/useCrm";
+import { signAudit } from "../../utils/entities/ruleUtils";
 
 const Col = ({ title, titleClass = "text-muted", children, last }) => (
   <div className={cx("audit-col", last && "audit-col--last")}>
@@ -22,14 +22,15 @@ const Col = ({ title, titleClass = "text-muted", children, last }) => (
 
 /** Daily audit — person → date → assigned → done → blocked → evidence, with PC/PM sign-offs. */
 export default function DailyAudit() {
+  const run = useAction();
   const navigate = useNavigate();
-  const data = useSelector(selectData);
+  const data = useData();
   const role = useSelector(selectRole);
-  const me = useSelector(selectMe);
+  const me = useMe();
   const [date, setDate] = useState(TODAY);
 
   const rows = useMemo(() => auditRows(data, teamPeople(data), date, role, me), [data, date, role, me]);
-  const sign = (key, who) => withCtx(crmActions.auditSigned, { key, who });
+  const sign = (key, who) => run(signAudit, { key, who });
 
   return (
     <div className="page">

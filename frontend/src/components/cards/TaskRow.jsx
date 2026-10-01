@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux";
 import { taskOpened } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
 
 /** Compact task line (project detail): status pill + title + assignee/due. Opens the drawer. */
 export default function TaskRow({ task }) {

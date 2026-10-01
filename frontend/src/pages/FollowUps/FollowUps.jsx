@@ -3,12 +3,12 @@ import FollowupItem from "../../components/cards/FollowupItem";
 import Card from "../../components/common/Card";
 import ChipGroup from "../../components/common/ChipGroup";
 import PillButton from "../../components/common/PillButton";
-import { useProjectFilter } from "./useProjectFilter";
-import { useDispatch, useSelector } from "react-redux";
-import { selectData } from "../../redux/selectors";
+import { useProjectFilter } from "../../utils/helpers/useProjectFilter";
+import { useDispatch } from "react-redux";
 import { modalOpened } from "../../redux/slices/uiSlice";
-import { TODAY, daysBetween } from "../../utils/date";
+import { TODAY, daysBetween } from "../../utils/helpers/date";
 import { mapFollowup } from "../../utils/domain/views";
+import { useData } from "../../app/useCrm";
 
 /** [label, predicate, tone] — the four follow-up swim lanes. */
 const GROUPS = [
@@ -20,8 +20,8 @@ const GROUPS = [
 
 export default function FollowUps() {
   const dispatch = useDispatch();
-  const data = useSelector(selectData);
-  const { filter, setFilter, options, matches, selectedProjectId } = useProjectFilter();
+  const data = useData();
+  const { filter, setFilter, options, matches, selectedProjectId } = useProjectFilter(data.projects);
 
   const { groups, awaitingUs, awaitingClient } = useMemo(() => {
     const pending = data.followups.filter((f) => f.status === "pending");

@@ -2,7 +2,7 @@
 import dayjs from "dayjs";
 
 /**
- * One field from a modal form definition (src/forms/modalForms.js).
+ * One field from a modal form definition (./modalForms.js).
  * Values are kept as strings (ISO dates, numeric strings), the same shape the
  * original stored, and converted for the Ant Design controls here.
  */

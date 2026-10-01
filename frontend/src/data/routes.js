@@ -1,5 +1,5 @@
 // View key ↔ URL. View keys are the original app's `view` values; ROLE_NAV
-// (constants/crm.js) decides which of them each role may open.
+// (data/crm.js) decides which of them each role may open.
 
 export const VIEW_PATHS = {
   dashboard: "/dashboard",
@@ -26,17 +26,6 @@ export const VIEW_PATHS = {
 };
 
 export const LOGIN_PATH = "/login";
-
-/** Build a URL for a view (and project id for the detail view). */
-export const pathFor = (view, params = {}) =>
-  view === "detail" ? `/projects/${params.projectId}` : VIEW_PATHS[view] || VIEW_PATHS.dashboard;
-
-/** Reverse lookup: which view does a pathname belong to? */
-export const viewForPath = (pathname) => {
-  if (/^\/projects\/[^/]+/.test(pathname)) return "detail";
-  const hit = Object.entries(VIEW_PATHS).find(([, p]) => p === pathname);
-  return hit ? hit[0] : null;
-};
 
 /** Header eyebrow + title per view (detail uses the project name). */
 export const VIEW_TITLES = {

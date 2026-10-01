@@ -4,19 +4,18 @@ import Card from "../../components/common/Card";
 import EmptyState from "../../components/common/EmptyState";
 import Pill from "../../components/common/Pill";
 import SectionTitle from "../../components/common/SectionTitle";
-import { COMPLETED_STAGE, GATES, STAGES } from "../../constants/crm";
+import { COMPLETED_STAGE, GATES, STAGES } from "../../data";
 import { useNavigate } from "react-router-dom";
-import { pathFor } from "../../constants/routes";
-import { useSelector } from "react-redux";
-import { selectData, selectHealthMap } from "../../redux/selectors";
-import { TODAY, daysBetween, fmt } from "../../utils/date";
+import { pathFor } from "../../utils/helpers/routes";
+import { TODAY, daysBetween, fmt } from "../../utils/helpers/date";
 import { isDone } from "../../utils/domain/tasks";
 import { healthTone, stageTone } from "../../utils/domain/tones";
+import { useData, useHealthMap } from "../../app/useCrm";
 
 /** Pipeline card view-model — port of the original `projectCards`. */
 function useProjectCards() {
-  const data = useSelector(selectData);
-  const H = useSelector(selectHealthMap);
+  const data = useData();
+  const H = useHealthMap();
   return useMemo(() => {
     const dueFu = data.followups.filter((f) => f.status === "pending" && daysBetween(f.due, TODAY) <= 0);
     const cards = data.projects.map((p) => {

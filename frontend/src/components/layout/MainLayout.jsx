@@ -3,7 +3,7 @@ import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { images } from "../../assets/images";
-import { viewForPath } from "../../constants/routes";
+import { viewForPath } from "../../utils/helpers/routes";
 import { useDispatch } from "react-redux";
 import { viewChanged } from "../../redux/slices/uiSlice";
 import FormModal from "../modals/FormModal";

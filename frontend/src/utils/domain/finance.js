@@ -1,6 +1,6 @@
 // Project finance — port of `staffRate`, `roleRate`, `fin(p)` and the portfolio roll-up.
-import { TODAY, daysBetween } from "../date";
-import { parseAmount } from "../format";
+import { TODAY, daysBetween } from "../helpers/date";
+import { parseAmount } from "../helpers/format";
 
 /** Real day rate of a staff member: (salary + allowances) / working days. */
 export const staffRate = (s) => (s ? Math.round(((s.salary || 0) + (s.allowances || 0)) / (s.workDays || 22)) : null);

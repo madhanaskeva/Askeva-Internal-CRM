@@ -3,10 +3,10 @@ import dayjs from "dayjs";
 import CheckToggle from "../../components/common/CheckToggle";
 import Pill from "../../components/common/Pill";
 import { useDispatch } from "react-redux";
-import { crmActions } from "../../redux/slices/crmSlice";
 import { modalOpened } from "../../redux/slices/uiSlice";
-import { withCtx } from "../../utils/actions/context";
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
+import { useAction } from "../../app/useCrm";
+import { setMilestoneTarget, toggleMilestone } from "../../utils/entities/projectUtils";
 
 /** Index of M7 ("Final payment & handover") — its target is the project deadline. */
 const FINAL_MS = 6;
@@ -22,9 +22,10 @@ const dotTone = (m) => (m.done ? "green" : m.over ? "danger" : "white");
  */
 export default function MilestoneList({ row, variant = "rows" }) {
   const dispatch = useDispatch();
+  const run = useAction();
   const projectId = row.id;
 
-  const toggle = (index) => withCtx(crmActions.milestoneToggled, { projectId, index });
+  const toggle = (index) => run(toggleMilestone, { projectId, index });
 
   // Original setTarget: M7 never changes directly — it opens a deadline revision request.
   const setTarget = (index, date) => {
@@ -34,7 +35,7 @@ export default function MilestoneList({ row, variant = "rows" }) {
       if (v !== row.deadlineIso) dispatch(modalOpened({ kind: "revise", extra: { projectId, to: v } }));
       return;
     }
-    withCtx(crmActions.milestoneTargetSet, { projectId, index, target: v });
+    run(setMilestoneTarget, { projectId, index, target: v });
   };
 
   if (variant === "tiles") {

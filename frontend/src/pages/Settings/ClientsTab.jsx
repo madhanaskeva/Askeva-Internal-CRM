@@ -2,12 +2,13 @@ import Card from "../../components/common/Card";
 import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
 import DataTable from "../../components/tables/DataTable";
-import { crmActions } from "../../redux/slices/crmSlice";
-import { withCtx } from "../../utils/actions/context";
-import { fmt } from "../../utils/date";
+import { fmt } from "../../utils/helpers/date";
+import { useAction } from "../../app/useCrm";
+import { toggleClientAccount } from "../../utils/entities/clientAccountUtils";
 
 /** Client SPOC portal accounts — suspend / reactivate. */
 export default function ClientsTab({ accounts, projects }) {
+  const run = useAction();
   const P = (id) => projects.find((p) => p.id === id) || {};
 
   const columns = [
@@ -20,7 +21,7 @@ export default function ClientsTab({ accounts, projects }) {
       title: "",
       key: "toggle",
       render: (_, c) => (
-        <PillButton size="xxs" onClick={() => withCtx(crmActions.clientAccountToggled, { accountId: c.id })}>
+        <PillButton size="xxs" onClick={() => run(toggleClientAccount, { accountId: c.id })}>
           {c.status === "Active" ? "Suspend" : "Reactivate"}
         </PillButton>
       ),

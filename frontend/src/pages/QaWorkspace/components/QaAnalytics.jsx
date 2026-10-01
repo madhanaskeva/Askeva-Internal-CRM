@@ -6,8 +6,8 @@ import StatCard from "../../../components/common/StatCard";
 import DataTable from "../../../components/tables/DataTable";
 import { useDispatch } from "react-redux";
 import { taskOpened } from "../../../redux/slices/uiSlice";
-import { cx } from "../../../utils/cx";
-import { wPct } from "../../../utils/pct";
+import { cx } from "../../../utils/helpers/cx";
+import { wPct } from "../../../utils/helpers/pct";
 
 const num = (title, key, cls) => ({ title, key, align: "right", render: (_, r) => <span className={cx("num-cell", cls)}>{r[key]}</span> });
 

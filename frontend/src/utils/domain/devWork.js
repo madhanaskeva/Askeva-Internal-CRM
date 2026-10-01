@@ -1,7 +1,7 @@
 // Developer "My work" + "Inbox" view-models — port of the original `myTasks`,
 // `inboxTasks`, `inbox` and `mw` in renderVals.
-import { BACK, FRONT, STAGES } from "../../constants/crm";
-import { TODAY, daysBetween, fmt } from "../date";
+import { BACK, FRONT, STAGES } from "../../data";
+import { TODAY, daysBetween, fmt } from "../helpers/date";
 import { isDone, roleTrack, taskTrack } from "./tasks";
 import { mapTask } from "./views";
 

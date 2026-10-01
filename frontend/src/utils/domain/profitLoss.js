@@ -1,16 +1,10 @@
 // P&L module — port of the original "P&L module" block of renderVals.
 // Colours are returned as text-colour keys (`.text-*`) and tone keys (`.tone-*`).
-import { COMPLETED_STAGE, STAGES } from "../../constants/crm";
-import { TODAY, daysBetween, monthKey, monthLabelShort } from "../date";
-import { inr } from "../format";
+import { COMPLETED_STAGE, STAGES } from "../../data";
+import { TODAY, daysBetween, monthKey, monthLabelShort } from "../helpers/date";
+import { inr } from "../helpers/format";
 import { roleRate, staffRate, teamOf } from "./finance";
 import { marginColor } from "./tones";
-
-export const PL_PERIODS = [
-  { value: "month", label: "This month" },
-  { value: "quarter", label: "This quarter" },
-  { value: "all", label: "All time" },
-];
 
 const sum = (list, fn) => list.reduce((s, x) => s + fn(x), 0);
 const pct = (v, total) => Math.round((v / total) * 100);

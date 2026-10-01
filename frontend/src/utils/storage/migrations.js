@@ -1,12 +1,10 @@
 // Schema migrations — a faithful port of the original constructor. Each block is
 // idempotent and guarded by a flag/field check, so existing saved data from the
 // HTML version keeps working and only missing pieces are filled in.
-import { DEFAULT_RULES } from "../../constants/crm";
-import {
-  SEED_FINANCE, SEED_PAYROLL, SEED_RELEASES, SEED_STAFF, SEED_TEAM, defaultMilestones, seed,
-} from "../../data/seed";
-import { TODAY, addDays } from "../date";
-import { uid } from "../format";
+import { DEFAULT_RULES, payroll as seedPayroll, projectFinance, projectTeams, releases as seedReleases, staff as seedStaff } from "../../data";
+import { defaultMilestones, seed } from "./seed";
+import { TODAY, addDays } from "../helpers/date";
+import { uid } from "../helpers/format";
 import { needsAccept, trackOf } from "../domain/tasks";
 
 const hhmm = (m) => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
@@ -34,7 +32,7 @@ export function migrateData(data) {
   data.projects.forEach((p) => {
     if (!p.team) {
       migrated = true;
-      const s = SEED_TEAM[p.id] || { team: { ui: "TBD", backend: "TBD", tester: "TBD", seniorDev: "TBD" }, budget: { uiDays: 0, backendDays: 0, testDays: 0, pcDays: 0, dayRate: 4000 } };
+      const s = projectTeams[p.id] || { team: { ui: "TBD", backend: "TBD", tester: "TBD", seniorDev: "TBD" }, budget: { uiDays: 0, backendDays: 0, testDays: 0, pcDays: 0, dayRate: 4000 } };
       p.team = structuredClone(s.team);
       p.budget = structuredClone(s.budget);
     }
@@ -43,7 +41,7 @@ export function migrateData(data) {
   data.projects.forEach((p) => {
     if (!p.invoices) {
       migrated = true;
-      const s = SEED_FINANCE[p.id] || { invoices: [], expenses: [], effort: { ui: 0, backend: 0, tester: 0, pc: 0 } };
+      const s = projectFinance[p.id] || { invoices: [], expenses: [], effort: { ui: 0, backend: 0, tester: 0, pc: 0 } };
       p.invoices = structuredClone(s.invoices);
       p.expenses = structuredClone(s.expenses);
       p.effort = structuredClone(s.effort);
@@ -52,8 +50,8 @@ export function migrateData(data) {
 
   if (!data.staff) {
     migrated = true;
-    data.staff = structuredClone(SEED_STAFF);
-    data.payroll = structuredClone(SEED_PAYROLL);
+    data.staff = structuredClone(seedStaff);
+    data.payroll = structuredClone(seedPayroll);
   }
 
   data.projects.forEach((p) => {
@@ -275,7 +273,7 @@ export function migrateData(data) {
 
   if (!data.releases) {
     migrated = true;
-    data.releases = structuredClone(SEED_RELEASES);
+    data.releases = structuredClone(seedReleases);
   }
 
   if (!data.v2alloc) {

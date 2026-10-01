@@ -1,7 +1,7 @@
 // Shared row view-models: mapTask / mapFollowup / mapCr — ported from the original
 // renderVals helpers, with tone keys instead of inline colours.
-import { CR_STATUSES, TS_LABEL } from "../../constants/crm";
-import { TODAY, daysBetween, fmt } from "../date";
+import { CR_STATUSES, TS_LABEL } from "../../data";
+import { TODAY, daysBetween, fmt } from "../helpers/date";
 import { dueInfo, priorityTone, taskStatusTone } from "./tones";
 import { isDone } from "./tasks";
 

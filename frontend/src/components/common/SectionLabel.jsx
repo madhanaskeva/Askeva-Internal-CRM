@@ -1,4 +1,4 @@
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
 
 /** Square dot + uppercase tracked label ("TODAY'S FOLLOW-UPS"). Use `onDark` inside ink cards. */
 export default function SectionLabel({ children, onDark = false, dotClassName, className, extra }) {

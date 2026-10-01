@@ -1,7 +1,7 @@
 // Who is using the app. The original had no real authentication — the user picks
 // a role (and, for PM, which Project Manager) from the sign-in / switch overlay.
 import { createSlice } from "@reduxjs/toolkit";
-import { loadSession } from "../../utils/storage/localStore";
+import { loadSession } from "../../utils/storage/persistence";
 
 const defaults = { role: "PM", pmId: null, signedIn: true, clientProject: "p1" };
 

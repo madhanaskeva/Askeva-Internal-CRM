@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 import Card from "../../components/common/Card";
 import DataTable from "../../components/tables/DataTable";
-import { ROLE_LABEL } from "../../constants/crm";
-import { useSelector } from "react-redux";
-import { selectFullData } from "../../redux/selectors";
-import { fmt } from "../../utils/date";
+import { ROLE_LABEL } from "../../data";
+import { fmt } from "../../utils/helpers/date";
+import { useFullData } from "../../app/useCrm";
 
 /** Label → text colour key (overrides/removals red, rule changes/additions green). */
 const logColor = (label) =>
@@ -32,7 +31,7 @@ const COLUMNS = [
 ];
 
 export default function SystemLog() {
-  const full = useSelector(selectFullData);
+  const full = useFullData();
 
   const rows = useMemo(
     () =>

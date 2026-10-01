@@ -1,4 +1,4 @@
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
 
 /**
  * Row of pill-shaped filter/toggle chips (single select).

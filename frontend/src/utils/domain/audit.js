@@ -1,7 +1,7 @@
 // Daily audit — person → date → assigned → done → blocked → evidence.
 // Ported from the original `auditFor` / auditRows / auditNav in renderVals.
-import { MANAGERS, TOP_ROLES } from "../../constants/crm";
-import { TODAY, daysBetween, fmt } from "../date";
+import { MANAGERS, TOP_ROLES } from "../../data";
+import { TODAY, daysBetween, fmt } from "../helpers/date";
 import { teamOf } from "./finance";
 import { isDone } from "./tasks";
 

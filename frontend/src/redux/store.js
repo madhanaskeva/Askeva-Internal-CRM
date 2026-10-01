@@ -1,27 +1,22 @@
+// Redux holds UI and session state only. CRM data (projects, tasks, …) lives in
+// localStorage through utils/entities/*Utils.js and is read with utils/storage/crmData.js.
 import { configureStore } from "@reduxjs/toolkit";
-import { saveCrmData, saveSession } from "../utils/storage/localStore";
-import crmReducer from "./slices/crmSlice";
+import { saveSession } from "../utils/storage/persistence";
 import sessionReducer from "./slices/sessionSlice";
 import uiReducer from "./slices/uiSlice";
 
 export const store = configureStore({
   reducer: {
-    crm: crmReducer,
     session: sessionReducer,
     ui: uiReducer,
   },
-  middleware: (getDefault) =>
-    // No thunks — actions live in utils/actions and dispatch plain reducers.
-    // The dataset is large; skip the dev-only deep checks to keep interactions snappy.
-    getDefault({ thunk: false, immutableCheck: false, serializableCheck: false }),
+  middleware: (getDefault) => getDefault({ thunk: false }),
 });
 
-// Write to localStorage whenever the crm dataset or the session changes
-// (reference check, so ui-only updates like typing a note don't trigger a save).
-let prev = store.getState();
+// Keep the signed-in session across a refresh.
+let prev = store.getState().session;
 store.subscribe(() => {
-  const next = store.getState();
-  if (next.crm !== prev.crm) saveCrmData(next.crm);
-  if (next.session !== prev.session) saveSession(next.session);
+  const next = store.getState().session;
+  if (next !== prev) saveSession(next);
   prev = next;
 });

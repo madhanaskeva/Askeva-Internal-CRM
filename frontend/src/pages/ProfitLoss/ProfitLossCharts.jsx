@@ -1,7 +1,7 @@
 import StackedBar from "../../components/charts/StackedBar";
 import Card from "../../components/common/Card";
-import { cx } from "../../utils/cx";
-import { hPct, wPct } from "../../utils/pct";
+import { cx } from "../../utils/helpers/cx";
+import { hPct, wPct } from "../../utils/helpers/pct";
 
 const ChartCard = ({ title, children }) => (
   <Card className="stack gap-10 pl-card">

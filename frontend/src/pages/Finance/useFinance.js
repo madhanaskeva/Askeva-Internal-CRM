@@ -1,12 +1,11 @@
 import { useMemo } from "react";
-import { useSelector } from "react-redux";
-import { selectFinRows, selectPortfolio } from "../../redux/selectors";
-import { inr } from "../../utils/format";
+import { inr } from "../../utils/helpers/format";
+import { useFinRows, usePortfolio } from "../../app/useCrm";
 
 /** Finance view-models — port of the original `finStats` + `finRows`. */
 export function useFinance() {
-  const port = useSelector(selectPortfolio);
-  const finRows = useSelector(selectFinRows);
+  const port = usePortfolio();
+  const finRows = useFinRows();
 
   const stats = useMemo(
     () => [

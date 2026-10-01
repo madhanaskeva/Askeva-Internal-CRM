@@ -1,9 +1,9 @@
 // Per-project row view-models shared by Dashboard, Finance, Deadlines and
 // Project detail — ports of the original `finRows` and `deadlineRows`.
 // Colours are returned as text-colour keys (see `.text-*`) and tone keys (`.tone-*`).
-import { STAGES } from "../../constants/crm";
-import { TODAY, daysBetween, fmt } from "../date";
-import { inr } from "../format";
+import { STAGES } from "../../data";
+import { TODAY, daysBetween, fmt } from "../helpers/date";
+import { inr } from "../helpers/format";
 import { leftLabel as leftText, mapMilestone } from "./health";
 import { healthTone, marginColor } from "./tones";
 

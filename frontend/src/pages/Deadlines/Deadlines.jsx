@@ -1,21 +1,19 @@
 import { useMemo } from "react";
 import Card from "../../components/common/Card";
 import StatCard from "../../components/common/StatCard";
-import { useSelector } from "react-redux";
-import { selectData, selectDeadlineRows, selectHealthMap } from "../../redux/selectors";
 import { healthTone } from "../../utils/domain/tones";
 import DeadlineCard from "./DeadlineCard";
-
-const STATUSES = ["On track", "At risk", "Delayed"];
+import { DEADLINE_STATUSES } from "../../data";
+import { useData, useDeadlineRows, useHealthMap } from "../../app/useCrm";
 
 export default function Deadlines() {
-  const data = useSelector(selectData);
-  const H = useSelector(selectHealthMap);
-  const deadlineRows = useSelector(selectDeadlineRows);
+  const data = useData();
+  const H = useHealthMap();
+  const deadlineRows = useDeadlineRows();
 
   const { dlStats, totalExt } = useMemo(
     () => ({
-      dlStats: STATUSES.map((s) => ({ label: s, value: data.projects.filter((p) => H[p.id].status === s).length, tone: healthTone(s) })),
+      dlStats: DEADLINE_STATUSES.map((s) => ({ label: s, value: data.projects.filter((p) => H[p.id].status === s).length, tone: healthTone(s) })),
       totalExt: Object.values(H).reduce((s, h) => s + h.ext, 0),
     }),
     [data, H],

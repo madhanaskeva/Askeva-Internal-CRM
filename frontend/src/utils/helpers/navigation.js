@@ -1,15 +1,15 @@
 // Sidebar navigation with live counts — port of the original `navAll` / `nav`.
-import { createSelector } from "@reduxjs/toolkit";
-import { ROLE_NAV } from "../../constants/crm";
-import { TODAY, daysBetween } from "../../utils/date";
-import { isDone, taskTrack } from "../../utils/domain/tasks";
-import { selectData, selectFinMap, selectFullData, selectHealthMap, selectRole } from "./index";
+import { ROLE_NAV } from "../../data";
+import { getFinMap, getHealthMap, memoLast } from "../storage/crmData";
+import { TODAY, daysBetween } from "./date";
+import { isDone, taskTrack } from "../domain/tasks";
 
 const trackForRole = (role) => (role === "Frontend" ? "frontend" : role === "DevOps" ? "devops" : "backend");
 
-export const selectNavCounts = createSelector(
-  [selectData, selectFullData, selectHealthMap, selectFinMap, selectRole],
-  (data, full, H, FIN, role) => {
+/** Live badge count per view. `data` is the role-scoped dataset, `full` the unscoped one. */
+export const getNavCounts = memoLast((data, full, role) => {
+    const H = getHealthMap(data);
+    const FIN = getFinMap(data);
     const openTasks = data.tasks.filter((t) => !isDone(t));
     const myTrack = trackForRole(role);
     const payMonth = TODAY.slice(0, 7);
@@ -42,8 +42,7 @@ export const selectNavCounts = createSelector(
       followups: data.followups.filter((f) => f.status === "pending" && daysBetween(f.due, TODAY) <= 0).length,
       crs: data.crs.filter((c) => c.status !== "Approved" && c.status !== "Rejected").length,
     };
-  },
-);
+});
 
 const navLabel = (view, role) =>
   ({
@@ -56,7 +55,8 @@ const navLabel = (view, role) =>
 /** Dashboard gets shortcut children (Tasks / Finance / Follow-ups) like the original sidebar. */
 const DASHBOARD_CHILDREN = [["tasks", "Tasks"], ["finance", "Finance"], ["followups", "Follow-ups"]];
 
-export const selectNavItems = createSelector([selectRole, selectNavCounts], (role, counts) =>
+/** Sidebar items (with counts) for a role. */
+export const getNavItems = memoLast((role, counts) =>
   ROLE_NAV[role].map((view) => ({
     view,
     label: navLabel(view, role),
@@ -70,7 +70,7 @@ export const selectNavItems = createSelector([selectRole, selectNavCounts], (rol
  * can see projects, and the dashboard shortcut views (the original sidebar let
  * every dashboard role jump to Tasks / Finance / Follow-ups).
  */
-export const selectAllowedViews = createSelector(selectRole, (role) => {
+export const getAllowedViews = memoLast((role) => {
   const views = new Set(ROLE_NAV[role]);
   if (views.has("projects")) views.add("detail");
   if (views.has("dashboard")) DASHBOARD_CHILDREN.forEach(([v]) => views.add(v));

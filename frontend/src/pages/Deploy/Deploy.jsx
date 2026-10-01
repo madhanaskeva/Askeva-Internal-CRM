@@ -7,21 +7,19 @@ import { deployRelease, requestProduction } from "../../utils/actions/releaseAct
 import CountCard from "../../components/cards/CountCard";
 import ReleaseCard from "./ReleaseCard";
 import { useDeploy } from "./useDeploy";
-
-const SMOKE_OPTS = [
-  { value: "Passed", label: "Smoke test passed" },
-  { value: "Failed", label: "Smoke test failed" },
-];
+import { SMOKE_OPTIONS } from "../../data";
+import { useAction } from "../../app/useCrm";
 
 export default function Deploy() {
   const dispatch = useDispatch();
+  const run = useAction();
   const note = useSelector((s) => s.ui.actionNote);
   const { isDevOps, queue, history, counts, canRequestProd, prodOpts } = useDeploy();
   const [smoke, setSmoke] = useState("Passed");
   const [downtime, setDowntime] = useState("");
 
   const deploy = (id) => {
-    if (deployRelease(id, { smoke, downtime })) {
+    if (run(deployRelease, id, { smoke, downtime }).ok) {
       setSmoke("Passed");
       setDowntime("");
     }
@@ -49,7 +47,7 @@ export default function Deploy() {
             placeholder="Request production release…"
             options={prodOpts}
             popupMatchSelectWidth={false}
-            onChange={(v) => v && requestProduction(v)}
+            onChange={(v) => v && run(requestProduction, v)}
           />
         )}
       </Card>
@@ -57,7 +55,7 @@ export default function Deploy() {
       {isDevOps && (
         <div className="dep-record row row--wrap">
           <span className="fw-700 text-ink">Deploy record</span>
-          <Select className="brand-input dep-record__smoke" size="small" value={smoke} options={SMOKE_OPTS} onChange={setSmoke} popupMatchSelectWidth={false} />
+          <Select className="brand-input dep-record__smoke" size="small" value={smoke} options={SMOKE_OPTIONS} onChange={setSmoke} popupMatchSelectWidth={false} />
           <Input
             className="brand-input dep-record__downtime"
             size="small"

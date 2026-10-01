@@ -1,9 +1,10 @@
 import Card from "../../components/common/Card";
-import { crmActions } from "../../redux/slices/crmSlice";
-import { withCtx } from "../../utils/actions/context";
+import { useAction } from "../../app/useCrm";
+import { addRedesign } from "../../utils/entities/projectUtils";
 
 /** Client & commitments: SPOC, escalation matrix, commercials, UI redesign counter. */
 export default function CommitmentsCard({ p }) {
+  const run = useAction();
   const over = p.redesigns > 2;
   const redesignNote = over ? "Over the 2-round limit — PM + client discussion required" : `${2 - Math.min(p.redesigns, 2)} round(s) left within standard timeline`;
 
@@ -31,7 +32,7 @@ export default function CommitmentsCard({ p }) {
         </div>
         <div className="row gap-8">
           <span className={`font-display pd-redesign__count ${over ? "text-danger" : "text-ink"}`}>{p.redesigns}</span>
-          <button type="button" className="pd-round-btn" title="Add redesign round" onClick={() => withCtx(crmActions.redesignAdded, { projectId: p.id })}>
+          <button type="button" className="pd-round-btn" title="Add redesign round" onClick={() => run(addRedesign, { projectId: p.id })}>
             +
           </button>
         </div>

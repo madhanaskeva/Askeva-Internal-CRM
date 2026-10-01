@@ -1,4 +1,4 @@
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
 
 /**
  * Mono status tag with an ink border (stage, health, status, severity…).

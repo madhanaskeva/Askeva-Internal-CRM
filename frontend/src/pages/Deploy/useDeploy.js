@@ -1,13 +1,11 @@
 import { useMemo } from "react";
-import { COMPLETED_STAGE, TS_LABEL } from "../../constants/crm";
+import { APPROVERS, COMPLETED_STAGE, GO_ROLES, MANAGERS, RELEASE_HISTORY_TEXT, RELEASE_STATUS, TS_LABEL } from "../../data";
 import { useSelector } from "react-redux";
-import { selectData, selectIsTop, selectRole } from "../../redux/selectors";
-import { APPROVERS } from "../../utils/actions/releaseActions";
-import { fmt } from "../../utils/date";
+import { selectIsTop, selectRole } from "../../redux/selectors";
+import { fmt } from "../../utils/helpers/date";
 import { isDone } from "../../utils/domain/tasks";
-import { RELEASE_STATUS, taskStatusTone } from "../../utils/domain/tones";
-
-const HISTORY_TEXT = { requested: "Requested", deployed: "Deployed", rolled_back: "Rolled back", go: "GO for production", approved: "Approval" };
+import { taskStatusTone } from "../../utils/domain/tones";
+import { useData } from "../../app/useCrm";
 
 /** Production gates for a release (empty for staging). */
 function productionGates(r, data, relTasks, role) {
@@ -27,7 +25,7 @@ function productionGates(r, data, relTasks, role) {
 
 /** Deploy page view-models — port of the original "deploy" section of renderVals. */
 export function useDeploy() {
-  const data = useSelector(selectData);
+  const data = useData();
   const role = useSelector(selectRole);
   const top = useSelector(selectIsTop);
 
@@ -62,7 +60,7 @@ export function useDeploy() {
         gates,
         canDeploy: canOperate && ((r.status === "requested" && r.env === "staging") || r.status === "go"),
         canRollback: canOperate && r.status === "deployed",
-        canGo: ["PM", "Admin", "SuperAdmin"].includes(role) && r.env === "production" && r.status === "requested",
+        canGo: GO_ROLES.includes(role) && r.env === "production" && r.status === "requested",
         history: (r.history || [])
           .slice()
           .reverse()
@@ -70,7 +68,7 @@ export function useDeploy() {
             key: i,
             date: fmt(x.date),
             actor: x.actor,
-            text: HISTORY_TEXT[x.to] || x.to,
+            text: RELEASE_HISTORY_TEXT[x.to] || x.to,
             note: x.note || "",
             color: x.to === "rolled_back" ? "danger" : x.to === "deployed" || x.to === "go" ? "green" : "ink",
           })),
@@ -88,7 +86,7 @@ export function useDeploy() {
         deployed: rels.filter((r) => r.status === "deployed").length,
         rolledBack: rels.filter((r) => r.status === "rolled_back").length,
       },
-      canRequestProd: ["PC", "PM", "Admin", "SuperAdmin"].includes(role),
+      canRequestProd: MANAGERS.includes(role),
       prodOpts: data.projects.filter((p) => p.stage >= 5 && p.stage < COMPLETED_STAGE).map((p) => ({ value: p.id, label: p.client })),
     };
   }, [data, role, top]);

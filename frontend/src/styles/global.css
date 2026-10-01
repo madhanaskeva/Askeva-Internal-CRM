@@ -6,7 +6,7 @@
    ALL styles live in src/styles — components/pages never import CSS and
    never use inline style attributes:
      global.css        tokens, base, shared component + layout classes
-     utilities.css     generated % width/height classes (see utils/pct.js)
+     utilities.css     generated % width/height classes (see utils/helpers/pct.js)
      pages/index.css   page-specific styles, one file per page
    ========================================================================== */
 

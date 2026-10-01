@@ -4,10 +4,12 @@ import PillButton from "../../components/common/PillButton";
 import { useDispatch } from "react-redux";
 import { taskOpened } from "../../redux/slices/uiSlice";
 import { approveRelease, goRelease, rollbackRelease } from "../../utils/actions/releaseActions";
+import { useAction } from "../../app/useCrm";
 
 /** One release (queue or history) with tasks, production gates, actions and history. */
 export default function ReleaseCard({ r, onDeploy }) {
   const dispatch = useDispatch();
+  const run = useAction();
 
   return (
     <Card className="stack gap-10">
@@ -49,7 +51,7 @@ export default function ReleaseCard({ r, onDeploy }) {
               <span className={`dep-gate__mark ${g.ok ? "tone-green" : "tone-rose text-danger"}`}>{g.ok ? "✓" : "✕"}</span>
               <span className="flex-1">{g.label}</span>
               {g.canApprove && (
-                <PillButton size="xxs" onClick={() => approveRelease(r.id, g.who)}>
+                <PillButton size="xxs" onClick={() => run(approveRelease, r.id, g.who)}>
                   Record approval
                 </PillButton>
               )}
@@ -64,7 +66,7 @@ export default function ReleaseCard({ r, onDeploy }) {
       {(r.canGo || r.canDeploy || r.canRollback) && (
         <div className="row row--wrap gap-6">
           {r.canGo && (
-            <PillButton tone="ink" size="sm" onClick={() => goRelease(r.id, r.gates)}>
+            <PillButton tone="ink" size="sm" onClick={() => run(goRelease, r.id, r.gates)}>
               PM · GO for production
             </PillButton>
           )}
@@ -74,7 +76,7 @@ export default function ReleaseCard({ r, onDeploy }) {
             </PillButton>
           )}
           {r.canRollback && (
-            <PillButton size="sm" dangerText onClick={() => rollbackRelease(r.id)}>
+            <PillButton size="sm" dangerText onClick={() => run(rollbackRelease, r.id)}>
               Roll back (reason in note)
             </PillButton>
           )}

@@ -1,7 +1,4 @@
-// Domain constants — ported 1:1 from the original Internal CRM script.
-
-export const STORAGE_KEY = "askeva-pc-crm-v2";
-export const LEGACY_STORAGE_KEY = "askeva-pc-crm-v1";
+// SOP stages, their gate checklists and the M1–M7 milestone names.
 
 export const STAGES = [
   "Sales handover",
@@ -30,54 +27,4 @@ export const GATES = [
   { hint: "Project completed. Archive documents and inform the Key Account Manager.", items: [] },
 ];
 
-export const CR_STATUSES = ["Raised", "Documented", "Estimated", "Quoted", "Approved"];
-export const CR_STEPS = ["Raised", "Documented as out-of-scope", "Estimated by lead", "Quoted by email", "Client email confirmation", "Added to milestones"];
-
-export const TASK_STATUSES = ["todo", "doing", "devdone", "testing", "failed", "rework", "passed", "closed"];
-export const TS_LABEL = { todo: "To do", doing: "In progress", devdone: "Dev completed", testing: "Testing", failed: "Failed", rework: "Rework", passed: "Passed", closed: "Closed" };
-export const TERMINAL = ["passed", "closed"];
-
-export const ROLES = ["SuperAdmin", "Admin", "PM", "PC", "Frontend", "Backend", "Tester", "DevOps", "Client"];
-export const ROLE_LABEL = { SuperAdmin: "Super admin", Admin: "Admin", PM: "Project Manager", PC: "Project Coordinator", Frontend: "Front-end Dev", Backend: "Back-end Dev", Tester: "Tester / QA", DevOps: "DevOps", Client: "Client" };
-export const ROLE_WHO = { SuperAdmin: "Full system · rules · log", Admin: "Meera · staff, P&L, settings", PC: "PC · runs every project", Frontend: "Rahul · UI track", Backend: "Farhan · API track", Tester: "Divya · QA", DevOps: "Naveen · deploys & infra", Client: "SPOC · portal only" };
-
-export const FRONT = ["Rahul", "Sneha", "UI team"];
-export const BACK = ["Farhan", "Imran", "Dev team", "Senior Dev", "Karthik"];
-export const OPS = ["Naveen", "DevOps"];
-
-/** Views each role may open, in sidebar order. The first entry is the role's landing view. */
-export const ROLE_NAV = {
-  SuperAdmin: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team", "pl", "finance", "salary", "settings", "syslog"],
-  Admin: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team", "pl", "finance", "salary", "settings"],
-  PM: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team"],
-  PC: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team", "tasks", "followups"],
-  Frontend: ["mywork", "inbox", "tasks", "audit"],
-  Backend: ["mywork", "inbox", "tasks", "audit"],
-  Tester: ["qa", "tasks", "audit"],
-  DevOps: ["deploy", "mywork", "inbox", "tasks", "audit"],
-  Client: ["client"],
-};
-
-/** Task transitions: from → [[to, rolesAllowed]]. */
-export const TRANS = {
-  todo: [["doing", ["Assignee", "PC", "PM"]]],
-  doing: [["devdone", ["Assignee", "PM"]]],
-  devdone: [["testing", ["Tester", "PM"]]],
-  testing: [["passed", ["Tester", "PM"]], ["failed", ["Tester", "PM"]]],
-  failed: [["rework", ["Assignee", "PM"]]],
-  rework: [["devdone", ["Assignee", "PM"]]],
-  passed: [["closed", ["PC", "Tester", "PM"]]],
-  closed: [],
-};
-
-export const BUG_FLOW = { Open: ["Fixed", ["Developer", "PM"]], Fixed: ["Retest", ["Tester", "PM"]], Retest: null, Rejected: null };
-
 export const MS = ["Onboarding complete", "Design system approved", "UI approved", "Architecture approved", "Backend complete", "Testing & demo", "Final payment & handover"];
-
-export const ROLE_OPTIONS = ["Admin", "Project Manager", "Project Coordinator", "UI / Frontend", "Backend", "Manual tester", "DevOps", "Senior Dev / Architect", "Sales"];
-
-/** Roles that manage delivery (PC/PM + top management). */
-export const MANAGERS = ["PC", "PM", "Admin", "SuperAdmin"];
-export const TOP_ROLES = ["Admin", "SuperAdmin"];
-
-export const DEFAULT_RULES = { strictGates: true, sameDayAccept: true, uiPhaseDays: 10, marginThreshold: 20, redesignLimit: 2, bugAgeRed: 3, prodNeedsClient: true };

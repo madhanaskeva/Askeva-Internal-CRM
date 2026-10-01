@@ -1,6 +1,6 @@
 // Deadline health — port of the original `health(p)` and milestone mapping.
-import { COMPLETED_STAGE } from "../../constants/crm";
-import { TODAY, addDays, daysBetween, fmt } from "../date";
+import { COMPLETED_STAGE } from "../../data";
+import { TODAY, addDays, daysBetween, fmt } from "../helpers/date";
 import { isDone } from "./tasks";
 
 /** Timeline impact of a CR in days, parsed from "+4 days". */

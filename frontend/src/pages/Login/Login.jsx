@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { images } from "../../assets/images";
-import { ROLE_NAV } from "../../constants/crm";
-import { pathFor } from "../../constants/routes";
+import { ROLE_NAV } from "../../data";
+import { pathFor } from "../../utils/helpers/routes";
 import RolePicker from "../../components/common/RolePicker";
 import { useSelector } from "react-redux";
 import { selectSession } from "../../redux/selectors";

@@ -5,22 +5,21 @@ import ChipGroup from "../../components/common/ChipGroup";
 import PillButton from "../../components/common/PillButton";
 import DataTable from "../../components/tables/DataTable";
 import { useNavigate } from "react-router-dom";
-import { pathFor } from "../../constants/routes";
-import { useSelector } from "react-redux";
-import { selectData, selectFullData } from "../../redux/selectors";
-import { QA_PERIODS, activeTesters, buildQaAnalytics, perTesterRows, qaDevelopers, qaWindow } from "../../utils/domain/qa";
+import { pathFor } from "../../utils/helpers/routes";
+import { activeTesters, buildQaAnalytics, perTesterRows, qaDevelopers, qaWindow } from "../../utils/domain/qa";
 import QaAnalytics from "../QaWorkspace/components/QaAnalytics";
 import QaSearchBar from "../QaWorkspace/components/QaSearchBar";
 import { useQaSearch } from "../QaWorkspace/useQaSearch";
+import { BUG_SEVERITIES, QA_PERIODS } from "../../data";
+import { useData, useFullData } from "../../app/useCrm";
 
-const SEVERITIES = ["Critical", "High", "Medium", "Low"];
 const num = (title, key) => ({ title, key, align: "right", render: (_, r) => <span className="num-cell">{r[key]}</span> });
 
 /** Team QA (managers): per-tester table + filterable QA analytics for the whole team or one tester. */
 export default function TeamQa() {
   const navigate = useNavigate();
-  const data = useSelector(selectData);
-  const full = useSelector(selectFullData);
+  const data = useData();
+  const full = useFullData();
   const [period, setPeriod] = useState("today");
   const [filters, setFilters] = useState({ tester: null, project: null, developer: null, severity: null });
   const [focus, setFocus] = useState(null);
@@ -45,7 +44,7 @@ export default function TeamQa() {
     ["tester", [{ value: "", label: "All testers" }, ...testers.map((t) => ({ value: t, label: t }))]],
     ["project", [{ value: "", label: "All projects" }, ...data.projects.map((p) => ({ value: p.id, label: p.client }))]],
     ["developer", [{ value: "", label: "All developers" }, ...qaDevelopers(data).map((d) => ({ value: d, label: d }))]],
-    ["severity", [{ value: "", label: "All severities" }, ...SEVERITIES.map((s) => ({ value: s, label: s }))]],
+    ["severity", [{ value: "", label: "All severities" }, ...BUG_SEVERITIES.map((s) => ({ value: s, label: s }))]],
   ];
 
   const testerCols = [

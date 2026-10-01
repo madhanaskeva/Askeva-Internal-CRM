@@ -1,12 +1,13 @@
 import { Select } from "antd";
 import Card from "../../components/common/Card";
 import DataTable from "../../components/tables/DataTable";
-import { STAGES } from "../../constants/crm";
-import { crmActions } from "../../redux/slices/crmSlice";
-import { withCtx } from "../../utils/actions/context";
+import { STAGES } from "../../data";
+import { useAction } from "../../app/useCrm";
+import { assignPm } from "../../utils/entities/projectUtils";
 
 /** Project → PM assignment (each PM sees only their assigned projects). */
 export default function PmTab({ projects, pms }) {
+  const run = useAction();
   const opts = [{ value: "", label: "— unassigned —" }, ...pms.map((x) => ({ value: x.id, label: x.name }))];
 
   const columns = [
@@ -22,7 +23,7 @@ export default function PmTab({ projects, pms }) {
           value={p.pmId || ""}
           options={opts}
           popupMatchSelectWidth={false}
-          onChange={(v) => withCtx(crmActions.pmAssigned, { projectId: p.id, pmId: v })}
+          onChange={(v) => run(assignPm, { projectId: p.id, pmId: v })}
         />
       ),
     },

@@ -1,17 +1,18 @@
 import { Modal } from "antd";
 import { images } from "../../assets/images";
-import { ROLE_LABEL } from "../../constants/crm";
+import { ROLE_LABEL } from "../../data";
 import { useDispatch, useSelector } from "react-redux";
-import { selectMe, selectRole } from "../../redux/selectors";
+import { selectRole } from "../../redux/selectors";
 import { switchClosed } from "../../redux/slices/uiSlice";
 import PillButton from "../common/PillButton";
 import RolePicker from "../common/RolePicker";
+import { useMe } from "../../app/useCrm";
 
 /** "Switch role" overlay — view the system as any role without signing out. */
 export default function RoleSwitchModal() {
   const dispatch = useDispatch();
   const open = useSelector((s) => s.ui.switchOpen);
-  const me = useSelector(selectMe);
+  const me = useMe();
   const role = useSelector(selectRole);
   const close = () => dispatch(switchClosed());
 

@@ -5,20 +5,22 @@ import EmptyState from "../../components/common/EmptyState";
 import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
 import { useDispatch, useSelector } from "react-redux";
-import { selectData, selectHealthMap, selectSession } from "../../redux/selectors";
-import { crmActions } from "../../redux/slices/crmSlice";
+import { selectSession } from "../../redux/selectors";
 import { clientProjectSelected } from "../../redux/slices/sessionSlice";
-import { withCtx } from "../../utils/actions/context";
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
 import { buildClientPortal } from "../../utils/domain/clientPortal";
+import { useAction, useData, useHealthMap } from "../../app/useCrm";
+import { approveClientGate, commentMilestone, markClientInputs } from "../../utils/entities/projectUtils";
+import { decideChangeRequestByClient } from "../../utils/entities/changeRequestUtils";
 
 const Title = ({ children, className }) => <div className={cx("section-title__text", className)}>{children}</div>;
 
 /** Client SPOC portal: progress, approvals, CR quotations, pending items, milestones, releases. */
 export default function ClientPortal() {
   const dispatch = useDispatch();
-  const data = useSelector(selectData);
-  const H = useSelector(selectHealthMap);
+  const run = useAction();
+  const data = useData();
+  const H = useHealthMap();
   const { clientProject } = useSelector(selectSession);
   const [drafts, setDrafts] = useState({});
 
@@ -26,12 +28,12 @@ export default function ClientPortal() {
   const c = useMemo(() => (cp ? buildClientPortal(data, cp, H[cp.id]) : null), [data, cp, H]);
   if (!c) return <div className="page"><EmptyState>No project available.</EmptyState></div>;
 
-  const approveGate = (a) => withCtx(crmActions.clientGateApproved, { projectId: c.id, stage: a.stage, key: a.key, label: a.label, spoc: c.spoc });
-  const decideCr = (crId, approve) => withCtx(crmActions.crClientDecided, { crId, approve });
+  const approveGate = (a) => run(approveClientGate, { projectId: c.id, stage: a.stage, key: a.key, label: a.label, spoc: c.spoc });
+  const decideCr = (crId, approve) => run(decideChangeRequestByClient, { crId, approve });
   const send = (m) => {
     const text = (drafts[m.id] || "").trim();
     if (!text) return;
-    withCtx(crmActions.milestoneCommented, { projectId: c.id, index: m.index, text, by: c.spoc });
+    run(commentMilestone, { projectId: c.id, index: m.index, text, by: c.spoc });
     setDrafts((d) => ({ ...d, [m.id]: "" }));
   };
 
@@ -101,7 +103,7 @@ export default function ClientPortal() {
               {c.inputs.done ? (
                 <span className="text-green fw-700">✓</span>
               ) : (
-                <PillButton size="xs" tone="ink" onClick={() => withCtx(crmActions.clientInputsMarked, { projectId: c.id, spoc: c.spoc })}>
+                <PillButton size="xs" tone="ink" onClick={() => run(markClientInputs, { projectId: c.id, spoc: c.spoc })}>
                   Mark uploaded
                 </PillButton>
               )}

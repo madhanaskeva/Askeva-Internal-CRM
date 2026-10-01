@@ -1,14 +1,13 @@
 import { Input, Modal } from "antd";
 import { useState } from "react";
 import Card from "../../components/common/Card";
-import { COMPLETED_STAGE, GATES, STAGES } from "../../constants/crm";
-import { useDispatch, useSelector } from "react-redux";
-import { selectStrict } from "../../redux/selectors";
-import { crmActions } from "../../redux/slices/crmSlice";
+import { COMPLETED_STAGE, GATES, STAGES } from "../../data";
+import { useDispatch } from "react-redux";
 import { toastShown } from "../../redux/slices/uiSlice";
-import { withCtx } from "../../utils/actions/context";
-import { cx } from "../../utils/cx";
-import { fmt } from "../../utils/date";
+import { cx } from "../../utils/helpers/cx";
+import { fmt } from "../../utils/helpers/date";
+import { useAction, useStrict } from "../../app/useCrm";
+import { advanceStage, setHold, toggleGate as toggleGateItem } from "../../utils/entities/projectUtils";
 
 /**
  * Dark stage-gate card: checklist for the current SOP stage, advance / override,
@@ -16,7 +15,8 @@ import { fmt } from "../../utils/date";
  */
 export default function StageGateCard({ p }) {
   const dispatch = useDispatch();
-  const strict = useSelector(selectStrict);
+  const run = useAction();
+  const strict = useStrict();
   const [holdOpen, setHoldOpen] = useState(false);
   const [reason, setReason] = useState("");
 
@@ -31,11 +31,11 @@ export default function StageGateCard({ p }) {
   const advTone = locked ? "locked" : gateOk ? "lime" : "danger";
   const progress = items.length ? `${doneCount}/${items.length} complete${gateOk ? " — gate open" : strict ? " — gate locked" : " (gates not enforced)"}` : "";
 
-  const toggleGate = (key) => withCtx(crmActions.gateToggled, { projectId: p.id, stage: n, key });
-  const advance = () => !locked && withCtx(crmActions.stageAdvanced, { projectId: p.id });
+  const toggleGate = (key) => run(toggleGateItem, { projectId: p.id, stage: n, key });
+  const advance = () => !locked && run(advanceStage, { projectId: p.id });
 
   const toggleHold = () => {
-    if (p.onHold) withCtx(crmActions.holdSet, { projectId: p.id, onHold: false });
+    if (p.onHold) run(setHold, { projectId: p.id, onHold: false });
     else {
       setReason("");
       setHoldOpen(true);
@@ -47,7 +47,7 @@ export default function StageGateCard({ p }) {
       dispatch(toastShown("A reason is required to put the project on hold."));
       return;
     }
-    withCtx(crmActions.holdSet, { projectId: p.id, onHold: true, reason: r });
+    run(setHold, { projectId: p.id, onHold: true, reason: r });
     setHoldOpen(false);
   };
 

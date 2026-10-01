@@ -4,16 +4,16 @@ import ChipGroup from "../../components/common/ChipGroup";
 import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
 import StatCard from "../../components/common/StatCard";
-import { useDispatch, useSelector } from "react-redux";
-import { selectData } from "../../redux/selectors";
-import { crmActions } from "../../redux/slices/crmSlice";
+import { useDispatch } from "react-redux";
 import { modalOpened } from "../../redux/slices/uiSlice";
-import { withCtx } from "../../utils/actions/context";
-import { fmt } from "../../utils/date";
+import { fmt } from "../../utils/helpers/date";
+import { useAction, useData } from "../../app/useCrm";
+import { toggleCommunicationCourt } from "../../utils/entities/communicationUtils";
 
 export default function Communication() {
   const dispatch = useDispatch();
-  const data = useSelector(selectData);
+  const run = useAction();
+  const data = useData();
   const [filter, setFilter] = useState("all");
 
   const filters = useMemo(() => [{ value: "all", label: "All" }, ...data.projects.map((p) => ({ value: p.id, label: p.client }))], [data.projects]);
@@ -48,7 +48,7 @@ export default function Communication() {
     return { list, stats };
   }, [data, filter]);
 
-  const toggleCourt = (id) => withCtx(crmActions.communicationCourtToggled, { communicationId: id });
+  const toggleCourt = (id) => run(toggleCommunicationCourt, { communicationId: id });
 
   return (
     <div className="page">

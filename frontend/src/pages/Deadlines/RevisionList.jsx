@@ -1,7 +1,7 @@
 import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
-import { crmActions } from "../../redux/slices/crmSlice";
-import { withCtx } from "../../utils/actions/context";
+import { useAction } from "../../app/useCrm";
+import { decideRevision } from "../../utils/entities/projectUtils";
 
 /**
  * Deadline revision requests (newest first) with PM approve / Reject on pending ones.
@@ -10,7 +10,8 @@ import { withCtx } from "../../utils/actions/context";
  * @param {object[]} revisions  buildDeadlineRow(...).revisions
  */
 export default function RevisionList({ projectId, revisions }) {
-  const decide = (revisionId, approve) => withCtx(crmActions.revisionDecided, { projectId, revisionId, approve });
+  const run = useAction();
+  const decide = (revisionId, approve) => run(decideRevision, { projectId, revisionId, approve });
 
   return revisions.map((v) => (
     <div key={v.id} className="dl-revision row row--wrap">

@@ -11,16 +11,10 @@ import StatCard from "../../components/common/StatCard";
 import GridTable from "../../components/tables/GridTable";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { pathFor } from "../../constants/routes";
+import { pathFor } from "../../utils/helpers/routes";
 import { taskOpened } from "../../redux/slices/uiSlice";
 import { useDashboard } from "./useDashboard";
-
-const SORTS = [
-  { value: "risk", label: "Risk" },
-  { value: "pl", label: "Lowest P&L" },
-  { value: "deadline", label: "Nearest deadline" },
-  { value: "burn", label: "Highest burn" },
-];
+import { DASHBOARD_SORTS } from "../../data";
 
 export default function Dashboard() {
   const [sort, setSort] = useState("risk");
@@ -125,7 +119,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <ChipGroup label="Sort projects by" options={SORTS} value={sort} onChange={setSort} />
+      <ChipGroup label="Sort projects by" options={DASHBOARD_SORTS} value={sort} onChange={setSort} />
 
       <GridTable
         className="dash-table"

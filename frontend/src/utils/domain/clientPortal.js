@@ -1,7 +1,7 @@
 // Client portal view-model — port of the original "client portal" block of renderVals.
-import { COMPLETED_STAGE, STAGES } from "../../constants/crm";
-import { TODAY, daysBetween, fmt } from "../date";
-import { inr } from "../format";
+import { COMPLETED_STAGE, STAGES } from "../../data";
+import { TODAY, daysBetween, fmt } from "../helpers/date";
+import { inr } from "../helpers/format";
 import { healthTone } from "./tones";
 
 /** [stage, gateKey, label] — approvals the client can give from the portal. */

@@ -1,7 +1,7 @@
 // Map domain states → tone keys (see `.tone-*` / `.text-*` in global.css).
 // These replace the inline `var(--…)` / hex colours the original computed.
-import { COMPLETED_STAGE } from "../../constants/crm";
-import { TODAY, daysBetween } from "../date";
+import { COMPLETED_STAGE, TASK_STATUS_TONE } from "../../data";
+import { TODAY, daysBetween } from "../helpers/date";
 
 /** Deadline health → pill tone. */
 export const healthTone = (s) => (s === "Delayed" ? "danger" : s === "At risk" ? "lime" : s === "Completed" ? "ink" : "green");
@@ -10,7 +10,6 @@ export const healthTone = (s) => (s === "Delayed" ? "danger" : s === "At risk" ?
 export const stageTone = (n) =>
   n >= COMPLETED_STAGE ? "green" : n >= 7 ? "ink" : n >= 6 ? "lime" : n >= 5 ? "ink" : n >= 4 ? "lime" : "white";
 
-export const TASK_STATUS_TONE = { todo: "white", doing: "lime", devdone: "paper", testing: "lime", failed: "danger", rework: "rose", passed: "green", closed: "ink" };
 export const taskStatusTone = (s) => TASK_STATUS_TONE[s] || "white";
 
 export const priorityTone = (p) => (p === "High" ? "ink" : p === "Med" ? "lime" : "white");
@@ -34,11 +33,4 @@ export const dueInfo = (due, done) => {
   if (dd < 0) return { label: `overdue ${-dd}d`, color: "danger", over: true, dd };
   if (dd === 0) return { label: "today", color: "green", over: false, dd };
   return { label: `in ${dd}d`, color: "muted", over: false, dd };
-};
-
-export const RELEASE_STATUS = {
-  requested: { label: "REQUESTED", tone: "lime" },
-  go: { label: "PM GO · READY", tone: "ink" },
-  deployed: { label: "DEPLOYED", tone: "green" },
-  rolled_back: { label: "ROLLED BACK", tone: "danger" },
 };

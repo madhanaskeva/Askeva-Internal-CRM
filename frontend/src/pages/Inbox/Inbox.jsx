@@ -3,14 +3,15 @@ import CountCard from "../../components/cards/CountCard";
 import InboxCard from "../../components/cards/InboxCard";
 import Card from "../../components/common/Card";
 import { useSelector } from "react-redux";
-import { selectData, selectHealthMap, selectRole } from "../../redux/selectors";
+import { selectRole } from "../../redux/selectors";
 import { buildDevWork } from "../../utils/domain/devWork";
+import { useData, useHealthMap } from "../../app/useCrm";
 
 /** Developer inbox — accept or decline new allocations the same day. */
 export default function Inbox() {
-  const data = useSelector(selectData);
+  const data = useData();
   const role = useSelector(selectRole);
-  const H = useSelector(selectHealthMap);
+  const H = useHealthMap();
   const { inbox, inboxLate } = useMemo(() => buildDevWork(data, role, H), [data, role, H]);
 
   return (

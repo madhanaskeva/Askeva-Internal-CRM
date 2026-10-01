@@ -7,14 +7,13 @@ import Card from "../../components/common/Card";
 import EmptyState from "../../components/common/EmptyState";
 import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
-import { STAGES } from "../../constants/crm";
+import { STAGES } from "../../data";
 import { useNavigate } from "react-router-dom";
-import { pathFor } from "../../constants/routes";
-import { useDispatch, useSelector } from "react-redux";
-import { selectData, selectDeadlineRows, selectFinRows, selectStrict } from "../../redux/selectors";
+import { pathFor } from "../../utils/helpers/routes";
+import { useDispatch } from "react-redux";
 import { modalOpened } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/cx";
-import { fmt } from "../../utils/date";
+import { cx } from "../../utils/helpers/cx";
+import { fmt } from "../../utils/helpers/date";
 import { isDone } from "../../utils/domain/tasks";
 import { mapCr, mapFollowup, mapTask } from "../../utils/domain/views";
 import MilestoneList from "../Deadlines/MilestoneList";
@@ -22,6 +21,7 @@ import RevisionList from "../Deadlines/RevisionList";
 import BudgetCard from "./BudgetCard";
 import CommitmentsCard from "./CommitmentsCard";
 import StageGateCard from "./StageGateCard";
+import { useData, useDeadlineRows, useFinRows, useStrict } from "../../app/useCrm";
 
 function ListCard({ title, action, onAction, children }) {
   return (
@@ -40,10 +40,10 @@ export default function ProjectDetail() {
   const { projectId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const data = useSelector(selectData);
-  const strict = useSelector(selectStrict);
-  const dl = useSelector(selectDeadlineRows).find((r) => r.id === projectId);
-  const fin = useSelector(selectFinRows).find((r) => r.id === projectId);
+  const data = useData();
+  const strict = useStrict();
+  const dl = useDeadlineRows().find((r) => r.id === projectId);
+  const fin = useFinRows().find((r) => r.id === projectId);
   const p = data.projects.find((x) => x.id === projectId);
 
   const lists = useMemo(() => {

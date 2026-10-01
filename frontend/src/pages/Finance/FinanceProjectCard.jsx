@@ -3,12 +3,12 @@ import Card from "../../components/common/Card";
 import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
 import { useNavigate } from "react-router-dom";
-import { pathFor } from "../../constants/routes";
+import { pathFor } from "../../utils/helpers/routes";
 import { useDispatch } from "react-redux";
-import { crmActions } from "../../redux/slices/crmSlice";
 import { modalOpened } from "../../redux/slices/uiSlice";
-import { withCtx } from "../../utils/actions/context";
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
+import { useAction } from "../../app/useCrm";
+import { acknowledgeOverrun, addEffortDay, removeExpense, toggleInvoice } from "../../utils/entities/projectUtils";
 
 function Metric({ label, value, valueColor = "ink", children }) {
   return (
@@ -35,6 +35,7 @@ function Panel({ title, action, onAction, children }) {
 /** One project's finance card — port of a `finRows` item in the original FINANCE view. */
 export default function FinanceProjectCard({ row: r }) {
   const dispatch = useDispatch();
+  const run = useAction();
   const navigate = useNavigate();
   const projectId = r.id;
   const openModal = (kind) => dispatch(modalOpened({ kind, extra: { projectId } }));
@@ -79,7 +80,7 @@ export default function FinanceProjectCard({ row: r }) {
           )}
           <PillButton size="xxs" onClick={() => openModal("overrun")}>Log / edit reason</PillButton>
           {ov && !ov.ack && (
-            <PillButton size="xxs" tone="green" onClick={() => withCtx(crmActions.overrunAcknowledged, { projectId })}>
+            <PillButton size="xxs" tone="green" onClick={() => run(acknowledgeOverrun, { projectId })}>
               PM acknowledge
             </PillButton>
           )}
@@ -99,7 +100,7 @@ export default function FinanceProjectCard({ row: r }) {
                 type="button"
                 title="Toggle received"
                 className={cx("pill pill--xs pill-btn fin-inv-status", `tone-${i.tone}`)}
-                onClick={() => withCtx(crmActions.invoiceToggled, { projectId, invoiceId: i.id })}
+                onClick={() => run(toggleInvoice, { projectId, invoiceId: i.id })}
               >
                 {i.status}
               </button>
@@ -125,7 +126,7 @@ export default function FinanceProjectCard({ row: r }) {
                 type="button"
                 title="+1 day"
                 className="fin-round-btn tone-lime fw-700"
-                onClick={() => withCtx(crmActions.effortDayAdded, { projectId, key: e.key })}
+                onClick={() => run(addEffortDay, { projectId, key: e.key })}
               >
                 +1
               </button>
@@ -145,7 +146,7 @@ export default function FinanceProjectCard({ row: r }) {
                 type="button"
                 title="Remove"
                 className="fin-round-btn tone-white"
-                onClick={() => withCtx(crmActions.expenseRemoved, { projectId, expenseId: x.id })}
+                onClick={() => run(removeExpense, { projectId, expenseId: x.id })}
               >
                 ✕
               </button>

@@ -4,28 +4,28 @@ import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
 import DataTable from "../../components/tables/DataTable";
 import { useDispatch } from "react-redux";
-import { crmActions } from "../../redux/slices/crmSlice";
 import { modalOpened } from "../../redux/slices/uiSlice";
 import { removeStaff, toggleStaff } from "../../utils/actions/adminActions";
-import { withCtx } from "../../utils/actions/context";
-import { fmt } from "../../utils/date";
-
-const LEADS = ["Admin", "Project Manager", "Project Coordinator"];
+import { fmt } from "../../utils/helpers/date";
+import { LEAD_ROLES } from "../../data";
+import { useAction } from "../../app/useCrm";
+import { setReportsTo } from "../../utils/entities/staffUtils";
 
 /** Staff & roles: full staff register with reporting line, status and admin actions. */
 export default function StaffTab({ staff, isSuper }) {
   const dispatch = useDispatch();
+  const run = useAction();
   const { modal } = App.useApp();
 
   const rows = staff
     .slice()
-    .sort((a, b) => LEADS.indexOf(b.role) - LEADS.indexOf(a.role) || a.name.localeCompare(b.name))
+    .sort((a, b) => LEAD_ROLES.indexOf(b.role) - LEAD_ROLES.indexOf(a.role) || a.name.localeCompare(b.name))
     .map((s) => ({
       ...s,
       locked: s.role === "Admin" && !isSuper,
       reportOpts: [
         { value: "", label: "— none —" },
-        ...staff.filter((x) => x.id !== s.id && LEADS.includes(x.role)).map((x) => ({ value: x.id, label: x.name + " · " + x.role })),
+        ...staff.filter((x) => x.id !== s.id && LEAD_ROLES.includes(x.role)).map((x) => ({ value: x.id, label: x.name + " · " + x.role })),
       ],
     }));
 
@@ -36,7 +36,7 @@ export default function StaffTab({ staff, isSuper }) {
       okText: "Remove",
       okButtonProps: { className: "btn-pill tone-danger" },
       cancelButtonProps: { className: "btn-pill tone-white" },
-      onOk: () => removeStaff(s.id),
+      onOk: () => run(removeStaff, s.id),
     });
 
   const columns = [
@@ -55,7 +55,7 @@ export default function StaffTab({ staff, isSuper }) {
           disabled={s.locked}
           options={s.reportOpts}
           popupMatchSelectWidth={false}
-          onChange={(v) => withCtx(crmActions.reportsToSet, { staffId: s.id, to: v })}
+          onChange={(v) => run(setReportsTo, { staffId: s.id, to: v })}
         />
       ),
     },
@@ -69,7 +69,7 @@ export default function StaffTab({ staff, isSuper }) {
           {s.locked && <span className="fs-10 text-muted">locked</span>}
           <div className="row row--wrap gap-4">
             <PillButton size="xxs" onClick={() => dispatch(modalOpened({ kind: "staffFull", extra: { staff: s } }))}>Edit</PillButton>
-            <PillButton size="xxs" className="tone-paper-btn" onClick={() => toggleStaff(s.id)}>{s.status === "Active" ? "Deactivate" : "Reactivate"}</PillButton>
+            <PillButton size="xxs" className="tone-paper-btn" onClick={() => run(toggleStaff, s.id)}>{s.status === "Active" ? "Deactivate" : "Reactivate"}</PillButton>
             <PillButton size="xxs" dangerText onClick={() => confirmRemove(s)}>Remove</PillButton>
           </div>
         </div>

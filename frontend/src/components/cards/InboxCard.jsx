@@ -4,6 +4,7 @@ import { actionNoteChanged, taskOpened } from "../../redux/slices/uiSlice";
 import { acceptTask, declineTask } from "../../utils/actions/taskActions";
 import Pill from "../common/Pill";
 import PillButton from "../common/PillButton";
+import { useAction } from "../../app/useCrm";
 
 /**
  * A new allocation waiting for the developer's acceptance (Inbox + My work).
@@ -12,6 +13,7 @@ import PillButton from "../common/PillButton";
  */
 export default function InboxCard({ t }) {
   const dispatch = useDispatch();
+  const run = useAction();
   const note = useSelector((s) => s.ui.actionNote);
   return (
     <div className="inbox-card stack gap-8">
@@ -27,7 +29,7 @@ export default function InboxCard({ t }) {
       {t.handoverPending && <div className="dashed-note">Handed over · {t.handoverLabel} — {t.handoverNote}</div>}
       <div className="meta">References · {t.ref}</div>
       <div className="row row--wrap gap-6">
-        <PillButton size="sm" tone="green" className="inbox-card__accept" onClick={() => acceptTask(t.id)}>Accept</PillButton>
+        <PillButton size="sm" tone="green" className="inbox-card__accept" onClick={() => run(acceptTask, t.id)}>Accept</PillButton>
         <Input
           size="small"
           className="brand-input input-pill tone-paper inbox-card__reason"
@@ -35,7 +37,7 @@ export default function InboxCard({ t }) {
           placeholder="Reason to decline (mandatory)…"
           onChange={(e) => dispatch(actionNoteChanged(e.target.value))}
         />
-        <PillButton size="sm" dangerText onClick={() => declineTask(t.id)}>Decline</PillButton>
+        <PillButton size="sm" dangerText onClick={() => run(declineTask, t.id)}>Decline</PillButton>
       </div>
     </div>
   );

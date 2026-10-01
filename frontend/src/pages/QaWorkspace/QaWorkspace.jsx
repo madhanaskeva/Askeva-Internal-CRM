@@ -1,23 +1,18 @@
 import { useMemo, useState } from "react";
 import ChipGroup from "../../components/common/ChipGroup";
-import { useSelector } from "react-redux";
-import { selectData, selectFullData, selectMe } from "../../redux/selectors";
-import { QA_PERIODS, activeTesters, buildQaAnalytics, buildQaQueue, qaMatcher, qaWindow } from "../../utils/domain/qa";
+import { activeTesters, buildQaAnalytics, buildQaQueue, qaMatcher, qaWindow } from "../../utils/domain/qa";
 import QaAnalytics from "./components/QaAnalytics";
 import QaQueue from "./components/QaQueue";
 import QaSearchBar from "./components/QaSearchBar";
 import { useQaSearch } from "./useQaSearch";
-
-const TABS = [
-  { value: "activity", label: "My daily activity" },
-  { value: "queue", label: "Queue · retest · decisions" },
-];
+import { QA_PERIODS, QA_TABS } from "../../data";
+import { useData, useFullData, useMe } from "../../app/useCrm";
 
 /** Tester workspace: personal daily activity analytics + test queue & bug decisions. */
 export default function QaWorkspace() {
-  const data = useSelector(selectData);
-  const full = useSelector(selectFullData);
-  const me = useSelector(selectMe);
+  const data = useData();
+  const full = useFullData();
+  const me = useMe();
   const [tab, setTab] = useState("activity");
   const [period, setPeriod] = useState("today");
   const [focus, setFocus] = useState(null);
@@ -32,7 +27,7 @@ export default function QaWorkspace() {
       <QaSearchBar {...search.barProps} />
 
       <div className="row row--between row--wrap gap-8">
-        <ChipGroup options={TABS} value={tab} onChange={setTab} />
+        <ChipGroup options={QA_TABS} value={tab} onChange={setTab} />
         {tab === "activity" && (
           <div className="row row--wrap gap-6">
             <span className="font-mono fs-11 text-ink">{qaWindow(period).label}</span>

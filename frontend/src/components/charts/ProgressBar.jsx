@@ -1,5 +1,5 @@
-import { cx } from "../../utils/cx";
-import { wPct } from "../../utils/pct";
+import { cx } from "../../utils/helpers/cx";
+import { wPct } from "../../utils/helpers/pct";
 
 /**
  * Horizontal progress/burn bar (CSS only — the original had no chart library).

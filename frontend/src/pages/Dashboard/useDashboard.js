@@ -1,26 +1,21 @@
 import { useMemo } from "react";
-import { COMPLETED_STAGE, STAGES } from "../../constants/crm";
-import { useSelector } from "react-redux";
-import {
-  selectAlerts, selectData, selectFinMap, selectFinRows, selectHealthMap, selectPortfolio,
-} from "../../redux/selectors";
-import { TODAY, daysBetween, fmt } from "../../utils/date";
-import { inr } from "../../utils/format";
+import { COMPLETED_STAGE, DEADLINE_STATUSES, HEALTH_SEVERITY, STAGES } from "../../data";
+import { TODAY, daysBetween, fmt } from "../../utils/helpers/date";
+import { inr } from "../../utils/helpers/format";
 import { summariseAlerts } from "../../utils/domain/alerts";
 import { isDone } from "../../utils/domain/tasks";
 import { healthTone, stageTone } from "../../utils/domain/tones";
 import { mapFollowup } from "../../utils/domain/views";
-
-const SEVERITY = { Delayed: 0, "At risk": 1, "On track": 2, Completed: 3 };
+import { useAlerts, useData, useFinMap, useFinRows, useHealthMap, usePortfolio } from "../../app/useCrm";
 
 /** All dashboard view-models — port of the original dashboard section of renderVals. */
 export function useDashboard(sort) {
-  const data = useSelector(selectData);
-  const H = useSelector(selectHealthMap);
-  const FIN = useSelector(selectFinMap);
-  const port = useSelector(selectPortfolio);
-  const alerts = useSelector(selectAlerts);
-  const finRows = useSelector(selectFinRows);
+  const data = useData();
+  const H = useHealthMap();
+  const FIN = useFinMap();
+  const port = usePortfolio();
+  const alerts = useAlerts();
+  const finRows = useFinRows();
 
   const base = useMemo(() => {
     const openTasks = data.tasks.filter((t) => !isDone(t));
@@ -39,7 +34,7 @@ export function useDashboard(sort) {
     ];
 
     const n = data.projects.length;
-    const deadline = ["On track", "At risk", "Delayed"].map((s) => {
+    const deadline = DEADLINE_STATUSES.map((s) => {
       const value = data.projects.filter((p) => H[p.id].status === s).length;
       return { label: s, value, tone: healthTone(s), pct: n ? Math.round((value / n) * 100) : 0 };
     });
@@ -88,7 +83,7 @@ export function useDashboard(sort) {
         if (sort === "pl") return fa.forecastPL - fb.forecastPL;
         if (sort === "deadline") return ha.left - hb.left;
         if (sort === "burn") return fb.burn - fa.burn;
-        return SEVERITY[ha.status] - SEVERITY[hb.status] || (fa.margin ?? 99) - (fb.margin ?? 99);
+        return HEALTH_SEVERITY[ha.status] - HEALTH_SEVERITY[hb.status] || (fa.margin ?? 99) - (fb.margin ?? 99);
       }),
     [finRows, FIN, H, sort],
   );

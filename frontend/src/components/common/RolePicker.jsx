@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { ROLES, ROLE_LABEL, ROLE_NAV, ROLE_WHO } from "../../constants/crm";
-import { pathFor } from "../../constants/routes";
+import { ROLES, ROLE_LABEL, ROLE_NAV, ROLE_WHO } from "../../data";
+import { pathFor } from "../../utils/helpers/routes";
 import { useDispatch, useSelector } from "react-redux";
-import { selectFullData, selectPms, selectSession } from "../../redux/selectors";
+import { selectSession } from "../../redux/selectors";
 import { roleSelected } from "../../redux/slices/sessionSlice";
 import { modalClosed, switchClosed, taskClosed } from "../../redux/slices/uiSlice";
-import { cx } from "../../utils/cx";
+import { cx } from "../../utils/helpers/cx";
+import { useFullData, usePms } from "../../app/useCrm";
 
 /**
  * Grid of role cards used by the sign-in page and the "Switch role" overlay.
@@ -15,8 +16,8 @@ export default function RolePicker() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { role, pmId, signedIn } = useSelector(selectSession);
-  const full = useSelector(selectFullData);
-  const pms = useSelector(selectPms);
+  const full = useFullData();
+  const pms = usePms();
 
   const pick = (r, id = null) => {
     dispatch(roleSelected({ role: r, pmId: id }));

@@ -1,13 +1,13 @@
 import { Drawer, Select } from "antd";
-import { MANAGERS, ROLE_LABEL, TERMINAL, TS_LABEL } from "../../constants/crm";
+import { ASSIGNEE_BASE, MANAGERS, RELEASE_STATE_TEXT, ROLE_LABEL, TERMINAL, TS_LABEL } from "../../data";
 import { useDispatch, useSelector } from "react-redux";
-import { selectData, selectRole, selectStrict } from "../../redux/selectors";
+import { selectRole } from "../../redux/selectors";
 import { actionNoteChanged, taskClosed } from "../../redux/slices/uiSlice";
 import { requestStaging } from "../../utils/actions/releaseActions";
 import {
   acceptTask, ackHandover, declineTask, forceCloseTask, handOverTask, moveBug, moveTask, reassignTask, toggleBlock,
 } from "../../utils/actions/taskActions";
-import { fmt } from "../../utils/date";
+import { fmt } from "../../utils/helpers/date";
 import { canMove, isDone, roleFor, taskTrack, trackOf, transitionsFor } from "../../utils/domain/tasks";
 import { severityTone } from "../../utils/domain/tones";
 import { mapTask } from "../../utils/domain/views";
@@ -15,8 +15,7 @@ import Card from "../common/Card";
 import NoteInput from "../common/NoteInput";
 import Pill from "../common/Pill";
 import PillButton from "../common/PillButton";
-
-const RELEASE_STATE = { requested: "awaiting DevOps", rolled_back: "ROLLED BACK", go: "PM GO given" };
+import { useAction, useData, useStrict } from "../../app/useCrm";
 
 const historyChange = (h) =>
   h.from && h.from !== h.to ? `${TS_LABEL[h.from]} → ${TS_LABEL[h.to]}`
@@ -29,12 +28,10 @@ const historyChange = (h) =>
 const historyColor = (note = "") =>
   /^BLOCKED|^OVERRIDE|^DECLINED/.test(note) ? "danger" : /^ACCEPTED|^HANDOVER/.test(note) ? "green" : "ink";
 
-const ASSIGNEE_BASE = ["PC", "PM", "UI team", "Dev team", "Senior Dev", "Tester", "Client SPOC", "Sales"];
-
 /** Task drawer — opened from anywhere with `dispatch(taskOpened(taskId))`. */
 export default function TaskDrawer() {
   const taskId = useSelector((s) => s.ui.taskId);
-  const data = useSelector(selectData);
+  const data = useData();
   const task = taskId ? data.tasks.find((t) => t.id === taskId) : null;
   const dispatch = useDispatch();
   return (
@@ -55,8 +52,9 @@ export default function TaskDrawer() {
 
 function TaskDrawerBody({ t, data }) {
   const dispatch = useDispatch();
+  const run = useAction();
   const role = useSelector(selectRole);
-  const strict = useSelector(selectStrict);
+  const strict = useStrict();
   const note = useSelector((s) => s.ui.actionNote);
   const m = mapTask(t, data);
   const project = data.projects.find((p) => p.id === t.projectId) || {};
@@ -68,7 +66,7 @@ function TaskDrawerBody({ t, data }) {
   const stagedIn = (() => {
     const r = (data.releases || []).filter((x) => x.tasks.includes(t.id)).sort((a, b) => b.requestedOn.localeCompare(a.requestedOn))[0];
     if (!r) return "";
-    const st = r.status === "deployed" ? "deployed " + fmt(r.deployedOn) : RELEASE_STATE[r.status];
+    const st = r.status === "deployed" ? "deployed " + fmt(r.deployedOn) : RELEASE_STATE_TEXT[r.status];
     return `${r.id} · ${r.version} · ${r.env} · ${st}`;
   })();
   const canRequestStaging =
@@ -115,7 +113,7 @@ function TaskDrawerBody({ t, data }) {
               className="brand-input brand-select-sm"
               defaultValue={t.assignee}
               options={assigneeOpts}
-              onChange={(v) => reassignTask(t.id, v)}
+              onChange={(v) => run(reassignTask, t.id, v)}
               popupMatchSelectWidth={false}
               showSearch
             />
@@ -136,7 +134,7 @@ function TaskDrawerBody({ t, data }) {
             <span>Handover</span>
             <div className="row row--wrap gap-8">
               <span>{m.handoverLabel} — {m.handoverNote}</span>
-              {isManager && <PillButton size="xxs" tone="ink" onClick={() => ackHandover(t.id)}>PC acknowledge</PillButton>}
+              {isManager && <PillButton size="xxs" tone="ink" onClick={() => run(ackHandover, t.id)}>PC acknowledge</PillButton>}
             </div>
           </>
         )}
@@ -147,15 +145,15 @@ function TaskDrawerBody({ t, data }) {
           <div className="label-caps fw-700">This task is waiting for your acceptance</div>
           <div className="fs-11">Accept to start work (due date stays as set by PC) or decline with a reason — it then returns to the PC unassigned.</div>
           <div className="row row--wrap gap-6">
-            <PillButton size="sm" tone="green" onClick={() => acceptTask(t.id)}>Accept</PillButton>
-            <PillButton size="sm" dangerText onClick={() => declineTask(t.id)}>Decline (reason in note below)</PillButton>
+            <PillButton size="sm" tone="green" onClick={() => run(acceptTask, t.id)}>Accept</PillButton>
+            <PillButton size="sm" dangerText onClick={() => run(declineTask, t.id)}>Decline (reason in note below)</PillButton>
           </div>
         </Card>
       )}
 
       {canRequestStaging && (
         <div className="row row--wrap gap-8">
-          <PillButton size="sm" tone="ink" onClick={() => requestStaging(t.id)}>Request staging deploy</PillButton>
+          <PillButton size="sm" tone="ink" onClick={() => run(requestStaging, t.id)}>Request staging deploy</PillButton>
           <span className="meta">Goes to DevOps queue · tester tests on staging</span>
         </div>
       )}
@@ -170,7 +168,7 @@ function TaskDrawerBody({ t, data }) {
             className="brand-input brand-select-sm"
             placeholder="Choose…"
             options={handOverOpts}
-            onChange={(v) => handOverTask(t.id, v)}
+            onChange={(v) => run(handOverTask, t.id, v)}
             popupMatchSelectWidth={false}
           />
           <span className="fs-11 text-muted">PC is notified and must acknowledge; the colleague must accept.</span>
@@ -192,7 +190,7 @@ function TaskDrawerBody({ t, data }) {
               title={`Allowed: ${a.who}`}
               tone={a.ok ? (a.to === "failed" ? "danger" : "lime") : "muted"}
               className={a.ok ? "" : "is-not-allowed"}
-              onClick={() => moveTask(t.id, a.to, note)}
+              onClick={() => run(moveTask, t.id, a.to, note)}
             >
               {a.to === "failed" ? "Fail → raise bug" : "→ " + TS_LABEL[a.to]} <span className="btn-sub">· {a.who}</span>
             </PillButton>
@@ -200,10 +198,10 @@ function TaskDrawerBody({ t, data }) {
           {t.status === "closed" ? (
             <span className="fs-11 text-muted">Closed — no further transitions.</span>
           ) : (
-            <PillButton size="sm" onClick={() => toggleBlock(t.id)}>{t.blocked ? "Unblock" : "Block (reason required)"}</PillButton>
+            <PillButton size="sm" onClick={() => run(toggleBlock, t.id)}>{t.blocked ? "Unblock" : "Block (reason required)"}</PillButton>
           )}
           {!TERMINAL.includes(t.status) && isManager && (
-            <PillButton size="xs" tone="transparent" dashed dangerText onClick={() => forceCloseTask(t.id)}>
+            <PillButton size="xs" tone="transparent" dashed dangerText onClick={() => run(forceCloseTask, t.id)}>
               {strict ? "Force close (locked by strictGates)" : "Force close — override"}
             </PillButton>
           )}
@@ -231,19 +229,19 @@ function TaskDrawerBody({ t, data }) {
                 Evidence: {b.evidence} · dev {b.developer} · tester {b.tester} {b.result && <strong className="text-ink">· {b.result}</strong>}
               </div>
               <div className="row row--wrap gap-6">
-                {b.status === "Open" && <PillButton size="xs" tone="lime" onClick={() => moveBug(b.id, "Fixed")}>Mark Fixed · Developer</PillButton>}
-                {b.status === "Open" && canFix && <PillButton size="xs" onClick={() => moveBug(b.id, "Rejected")}>Reject — not a bug (reason) · Developer</PillButton>}
+                {b.status === "Open" && <PillButton size="xs" tone="lime" onClick={() => run(moveBug, b.id, "Fixed")}>Mark Fixed · Developer</PillButton>}
+                {b.status === "Open" && canFix && <PillButton size="xs" onClick={() => run(moveBug, b.id, "Rejected")}>Reject — not a bug (reason) · Developer</PillButton>}
                 {b.status === "Rejected" && canTest && (
                   <>
-                    <PillButton size="xs" tone="ink" onClick={() => moveBug(b.id, "NotABug")}>Accept · Not a bug · Tester</PillButton>
-                    <PillButton size="xs" tone="danger" onClick={() => moveBug(b.id, "Reopened")}>Reopen · Tester</PillButton>
+                    <PillButton size="xs" tone="ink" onClick={() => run(moveBug, b.id, "NotABug")}>Accept · Not a bug · Tester</PillButton>
+                    <PillButton size="xs" tone="danger" onClick={() => run(moveBug, b.id, "Reopened")}>Reopen · Tester</PillButton>
                   </>
                 )}
-                {b.status === "Fixed" && <PillButton size="xs" tone="lime" onClick={() => moveBug(b.id, "Retest")}>Start Retest · Tester</PillButton>}
+                {b.status === "Fixed" && <PillButton size="xs" tone="lime" onClick={() => run(moveBug, b.id, "Retest")}>Start Retest · Tester</PillButton>}
                 {b.status === "Retest" && (
                   <>
-                    <PillButton size="xs" tone="green" onClick={() => moveBug(b.id, "Verified")}>Verified · Tester</PillButton>
-                    <PillButton size="xs" tone="danger" onClick={() => moveBug(b.id, "Reopened")}>Reopen · Tester</PillButton>
+                    <PillButton size="xs" tone="green" onClick={() => run(moveBug, b.id, "Verified")}>Verified · Tester</PillButton>
+                    <PillButton size="xs" tone="danger" onClick={() => run(moveBug, b.id, "Reopened")}>Reopen · Tester</PillButton>
                   </>
                 )}
               </div>
