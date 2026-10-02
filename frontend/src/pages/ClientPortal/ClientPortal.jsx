@@ -7,6 +7,7 @@ import PillButton from "../../components/common/PillButton";
 import { useDispatch, useSelector } from "react-redux";
 import { selectSession } from "../../redux/selectors";
 import { clientProjectSelected } from "../../redux/slices/sessionSlice";
+import { modalOpened, toastShown } from "../../redux/slices/uiSlice";
 import { cx } from "../../utils/helpers/classNames";
 import { buildClientPortal } from "../../utils/domain/clientPortal";
 import { useAction, useData, useHealthMap } from "../../app/useCrm";
@@ -29,7 +30,10 @@ export default function ClientPortal() {
   if (!c) return <div className="page"><EmptyState>No project available.</EmptyState></div>;
 
   const approveGate = (a) => run(approveClientGate, { projectId: c.id, stage: a.stage, key: a.key, label: a.label, spoc: c.spoc });
-  const decideCr = (crId, approve) => run(decideChangeRequestByClient, { crId, approve });
+  const decideCr = (crId, approve) => {
+    run(decideChangeRequestByClient, { crId, approve });
+    dispatch(toastShown(approve ? "Change request accepted by the client." : "Change request rejected by the client."));
+  };
   const send = (m) => {
     const text = (drafts[m.id] || "").trim();
     if (!text) return;
@@ -74,7 +78,16 @@ export default function ClientPortal() {
 
       <div className="grid-auto min-280 cp-grid">
         <Card tone="lime" className="stack gap-8 cp-card">
-          <Title>Your approvals needed</Title>
+          <div className="row row--between row--wrap gap-8 items-center">
+            <Title>Your approvals needed</Title>
+            <PillButton
+              size="xs"
+              tone="ink"
+              onClick={() => dispatch(modalOpened({ kind: "cr", extra: { projectId: c.id } }))}
+            >
+              Request a change
+            </PillButton>
+          </div>
           {c.approvals.map((a) => (
             <div key={a.key} className="cp-box row row--between gap-8">
               <span className="text-ink fw-600">{a.label}</span>

@@ -1,6 +1,6 @@
 import Card from "../../components/common/Card";
 import { useAction } from "../../app/useCrm";
-import { addRedesign } from "../../utils/entities/projectUtils";
+import { addRedesign, removeRedesign } from "../../utils/entities/projectUtils";
 
 /** Client & commitments: SPOC, escalation matrix, commercials, UI redesign counter. */
 export default function CommitmentsCard({ p }) {
@@ -32,9 +32,19 @@ export default function CommitmentsCard({ p }) {
           <div className="label-caps text-muted">UI redesign rounds</div>
           <div className={`fs-11 ${over ? "text-danger" : "text-ink"}`}>{redesignNote}</div>
         </div>
-        <div className="row gap-8">
+        <div className="row gap-8 items-center">
+          <button
+            type="button"
+            className="pd-round-btn"
+            title="Remove redesign round"
+            aria-label="Remove redesign round"
+            disabled={!p.redesigns}
+            onClick={() => run(removeRedesign, { projectId: p.id })}
+          >
+            −
+          </button>
           <span className={`font-display pd-redesign__count ${over ? "text-danger" : "text-ink"}`}>{p.redesigns}</span>
-          <button type="button" className="pd-round-btn" title="Add redesign round" onClick={() => run(addRedesign, { projectId: p.id })}>
+          <button type="button" className="pd-round-btn" title="Add redesign round" aria-label="Add redesign round" onClick={() => run(addRedesign, { projectId: p.id })}>
             +
           </button>
         </div>

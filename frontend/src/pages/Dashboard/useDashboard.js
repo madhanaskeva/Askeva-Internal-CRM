@@ -26,7 +26,7 @@ export function useDashboard(sort) {
     const completed = data.projects.filter((p) => p.stage >= COMPLETED_STAGE).length;
 
     const stats = [
-      { key: "done", label: "Completed projects", value: completed, sub: `${completed} of ${data.projects.length} total projects delivered`, tone: "lime", view: "projects" },
+      { key: "done", label: "Completed projects", value: completed, sub: `${completed} of ${data.projects.length} total projects delivered`, tone: "lime", view: null },
       { key: "active", label: "Active projects", value: data.projects.filter((p) => p.stage < COMPLETED_STAGE).length, sub: `${data.projects.filter((p) => p.stage === 4).length} in UI phase · ${data.projects.filter((p) => p.stage === 5).length} in backend`, tone: "white", view: "projects" },
       { key: "tasks", label: "Open tasks", value: openTasks.length, sub: `${overdueTasks.length} overdue`, tone: overdueTasks.length ? "ink800" : "white", view: "tasks" },
       { key: "fu", label: "Follow-ups due", value: dueFu.length, sub: `${pendingFu.filter((f) => daysBetween(f.due, TODAY) < 0).length} missed`, tone: "white", view: "followups" },
