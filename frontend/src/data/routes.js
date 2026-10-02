@@ -19,7 +19,6 @@ export const VIEW_PATHS = {
   teamqa: "/tester",
   audit: "/audit",
   client: "/client-portal",
-  communication: "/communication",
   tasks: "/tasks",
   followups: "/follow-ups",
   crs: "/change-requests",
@@ -30,7 +29,6 @@ export const LOGIN_PATH = "/login";
 /** Header eyebrow + title per view (detail uses the project name). */
 export const VIEW_TITLES = {
   teamqa: ["Team QA workspace & quality analytics", "Team QA"],
-  communication: ["Daily Call MoM, WhatsApp logs & Email confirmations", "Client communication"],
   settings: ["Staff, roles, structure & rules", "Settings"],
   syslog: ["Every change, every role", "System log"],
   pl: ["Profit & loss", "P&L"],
