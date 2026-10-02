@@ -8,7 +8,7 @@ import { canMove, needsAccept, roleFor } from "../domain/tasks";
 import { isStrict } from "../entities/ruleUtils";
 import {
   acceptTaskRecord, acknowledgeHandover, declineTaskRecord, forceCloseTaskRecord, getTaskById, handOverTaskRecord,
-  moveTaskStatus, reassignTaskRecord, toggleTaskBlock,
+  moveTaskStatus, reassignTaskRecord, toggleChecklistItemRecord, toggleTaskBlock,
 } from "../entities/taskUtils";
 import { done, refuse } from "./context";
 
@@ -100,4 +100,9 @@ export function moveBug(ctx, bugId, to) {
   }
   moveBugStatus(ctx, { bugId, to, note });
   return done({ clearNote: true });
+}
+
+export function toggleChecklistItem(ctx, taskId, itemIndex) {
+  toggleChecklistItemRecord(ctx, { taskId, itemIndex });
+  return done();
 }
