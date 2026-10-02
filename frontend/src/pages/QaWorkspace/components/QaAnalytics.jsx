@@ -121,7 +121,7 @@ export default function QaAnalytics({ qa, onFocus, showDev = true }) {
         ))}
       </div>
 
-      <TableCard title="Project-wise activity" meta="Click a project to drill down">
+      <TableCard title="Project-wise activity">
         {qa.byProject.length > 0 && <DataTable columns={projectCols} dataSource={qa.byProject} flat className="card-table" />}
       </TableCard>
 
@@ -187,45 +187,28 @@ export default function QaAnalytics({ qa, onFocus, showDev = true }) {
         <TableCard title="Retest activity">
           {qa.retests.length > 0 && <DataTable columns={retestCols} dataSource={qa.retests} flat className="card-table" />}
         </TableCard>
-        <div className="stack gap-16">
-          <Card tone="ink800" className="stack gap-6 qa-card">
-            <div className="section-title__text text-lime">Pending QA</div>
-            {qa.pending.map((p) => (
-              <div key={p.label} className="qa-line qa-line--dark">
-                <span className="ellipsis flex-1">{p.label}</span>
-                <strong className="font-mono fs-13">{p.n}</strong>
-              </div>
-            ))}
-          </Card>
-          <Card tone="lime" className="stack gap-6 qa-card">
-            <div className="section-title__text">Test next · high priority first</div>
-            {qa.next.map((n) => (
-              <button key={n.key} type="button" className="qa-next" onClick={() => open(n.taskId)}>
-                <span className="mono-meta">{n.n}</span>
-                <Pill size="xs" tone={n.sevTone}>{n.sev}</Pill>
-                <Pill size="xs" tone="paper">{n.kind}</Pill>
-                <span className="flex-1 text-ink">
-                  <strong className="font-mono fs-10">{n.id}</strong> {n.label}
-                </span>
-                <span className="fs-10 text-muted nowrap">{n.project}</span>
-              </button>
-            ))}
-          </Card>
-        </div>
+        <Card tone="ink800" className="stack gap-6 qa-card">
+          <div className="section-title__text text-lime">Pending QA</div>
+          {qa.pending.map((p) => (
+            <div key={p.label} className="qa-line qa-line--dark">
+              <span className="ellipsis flex-1">{p.label}</span>
+              <strong className="font-mono fs-13">{p.n}</strong>
+            </div>
+          ))}
+        </Card>
+        <TableCard title="Complete activity · chronological">
+          {qa.timeline.map((l) => (
+            <button key={l.key} type="button" className="qa-timeline" onClick={() => open(l.taskId)}>
+              <span className="mono-meta">{l.when}</span>
+              <span className={`fs-11 fw-700 text-${l.color}`}>{l.text}</span>
+              <span className="fs-11 text-ink">
+                {l.ref} <span className="text-muted">{l.note}</span>
+              </span>
+              <span className="fs-10 text-muted qa-timeline__project">{l.project}</span>
+            </button>
+          ))}
+        </TableCard>
       </div>
-
-      <TableCard title="Complete activity · chronological" meta="System-generated · click to open">
-        {qa.timeline.map((l) => (
-          <button key={l.key} type="button" className="qa-timeline" onClick={() => open(l.taskId)}>
-            <span className="mono-meta">{l.when}</span>
-            <span className={`fs-11 fw-700 text-${l.color}`}>{l.text}</span>
-            <span className="fs-11 text-ink">
-              {l.ref} <span className="text-muted">{l.note}</span>
-            </span>
-            <span className="fs-10 text-muted qa-timeline__project">{l.project}</span>
-          </button>
-        ))}
-      </TableCard>
     </>
   );
 }
