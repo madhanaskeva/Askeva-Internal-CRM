@@ -9,104 +9,42 @@ const trackForRole = (role) =>
 
 /** Live badge count per view. `data` is the role-scoped dataset, `full` the unscoped one. */
 export const getNavCounts = memoLast((data, full, role) => {
-<<<<<<< HEAD
-    const H = getHealthMap(data);
-    const FIN = getFinMap(data);
-    const openTasks = data.tasks.filter((t) => !isDone(t));
-    const myTrack = trackForRole(role);
-    const payMonth = TODAY.slice(0, 7);
-    const lowMargin = data.projects.filter((p) => FIN[p.id].margin != null && FIN[p.id].margin < 20).length;
-    const overdueInv = Object.values(FIN).reduce((s, f) => s + f.overdueInv.length, 0);
-    const byRoleTrack = (t) =>
-      role === "Frontend" ? taskTrack(t) === "frontend"
-        : role === "Backend" ? taskTrack(t) === "backend"
-        : role === "DevOps" ? taskTrack(t) === "devops"
-        : true;
-    return {
-      dashboard: 0,
-      mywork: data.tasks.filter((t) => !isDone(t) && t.acceptance !== "pending" && t.assignee !== "Unassigned" && taskTrack(t) === myTrack).length,
-      inbox: role === "Tester"
-        ? data.tasks.filter((t) => t.acceptance === "pending" && (t.assignee === "Divya" || t.assignee === "Tester")).length
-        : data.tasks.filter((t) => t.acceptance === "pending" && taskTrack(t) === myTrack).length,
-      qa: data.tasks.filter((t) => t.status === "devdone").length + data.bugs.filter((b) => b.status === "Fixed").length,
-      client: 0,
-      audit: 0,
-      team: (data.staff || []).filter((s) => s.status === "Active").length,
-      deploy: (data.releases || []).filter((r) => ["requested", "go"].includes(r.status)).length,
-      pl: 0,
-      settings: 0,
-      teamqa: data.tasks.filter((t) => t.status === "devdone").length,
-      communication: (data.clientCommunications || []).filter((c) => c.court === "client").length,
-      syslog: (full.syslog || []).filter((l) => l.date === TODAY).length,
-      projects: data.projects.length,
-      deadlines: data.projects.filter((p) => H[p.id].status === "Delayed").length,
-      finance: overdueInv + lowMargin,
-      salary: (data.payroll || []).filter((e) => e.month === payMonth && e.status !== "Paid").length,
-      tasks: openTasks.filter(byRoleTrack).length,
-      followups: data.followups.filter((f) => f.status === "pending" && daysBetween(f.due, TODAY) <= 0).length,
-      crs: data.crs.filter((c) => c.status !== "Approved" && c.status !== "Rejected").length,
-    };
-=======
   const H = getHealthMap(data);
   const FIN = getFinMap(data);
   const openTasks = data.tasks.filter((t) => !isDone(t));
   const myTrack = trackForRole(role);
   const payMonth = TODAY.slice(0, 7);
-  const lowMargin = data.projects.filter(
-    (p) => FIN[p.id].margin != null && FIN[p.id].margin < 20,
-  ).length;
-  const overdueInv = Object.values(FIN).reduce(
-    (s, f) => s + f.overdueInv.length,
-    0,
-  );
+  const lowMargin = data.projects.filter((p) => FIN[p.id].margin != null && FIN[p.id].margin < 20).length;
+  const overdueInv = Object.values(FIN).reduce((s, f) => s + f.overdueInv.length, 0);
   const byRoleTrack = (t) =>
-    role === "Frontend"
-      ? taskTrack(t) === "frontend"
-      : role === "Backend"
-        ? taskTrack(t) === "backend"
-        : role === "DevOps"
-          ? taskTrack(t) === "devops"
-          : true;
+    role === "Frontend" ? taskTrack(t) === "frontend"
+      : role === "Backend" ? taskTrack(t) === "backend"
+      : role === "DevOps" ? taskTrack(t) === "devops"
+      : true;
   return {
     dashboard: 0,
-    mywork: data.tasks.filter(
-      (t) =>
-        !isDone(t) &&
-        t.acceptance !== "pending" &&
-        t.assignee !== "Unassigned" &&
-        taskTrack(t) === myTrack,
-    ).length,
-    inbox: data.tasks.filter(
-      (t) => t.acceptance === "pending" && taskTrack(t) === myTrack,
-    ).length,
-    qa:
-      data.tasks.filter((t) => t.status === "devdone").length +
-      data.bugs.filter((b) => b.status === "Fixed").length,
+    mywork: data.tasks.filter((t) => !isDone(t) && t.acceptance !== "pending" && t.assignee !== "Unassigned" && taskTrack(t) === myTrack).length,
+    inbox: role === "Tester"
+      ? data.tasks.filter((t) => t.acceptance === "pending" && (t.assignee === "Divya" || t.assignee === "Tester" || taskTrack(t) === "qa")).length
+      : data.tasks.filter((t) => t.acceptance === "pending" && taskTrack(t) === myTrack).length,
+    qa: data.tasks.filter((t) => t.status === "devdone").length + data.bugs.filter((b) => b.status === "Fixed").length,
     client: 0,
     audit: 0,
     team: (data.staff || []).filter((s) => s.status === "Active").length,
-    deploy: (data.releases || []).filter((r) =>
-      ["requested", "go"].includes(r.status),
-    ).length,
+    deploy: (data.releases || []).filter((r) => ["requested", "go"].includes(r.status)).length,
     pl: 0,
     settings: 0,
     teamqa: data.tasks.filter((t) => t.status === "devdone").length,
+    communication: (data.clientCommunications || []).filter((c) => c.court === "client").length,
     syslog: (full.syslog || []).filter((l) => l.date === TODAY).length,
     projects: data.projects.length,
     deadlines: data.projects.filter((p) => H[p.id].status === "Delayed").length,
     finance: overdueInv + lowMargin,
-    salary: (data.payroll || []).filter(
-      (e) => e.month === payMonth && e.status !== "Paid",
-    ).length,
+    salary: (data.payroll || []).filter((e) => e.month === payMonth && e.status !== "Paid").length,
     tasks: openTasks.filter(byRoleTrack).length,
-    followups: data.followups.filter(
-      (f) => f.status === "pending" && daysBetween(f.due, TODAY) <= 0,
-    ).length,
-    crs: data.crs.filter(
-      (c) => c.status !== "Approved" && c.status !== "Rejected",
-    ).length,
+    followups: data.followups.filter((f) => f.status === "pending" && daysBetween(f.due, TODAY) <= 0).length,
+    crs: data.crs.filter((c) => c.status !== "Approved" && c.status !== "Rejected").length,
   };
->>>>>>> 854ee094fc263db027b67cefb82ee1b277d19d36
 });
 
 const navLabel = (view, role) =>
@@ -122,6 +60,7 @@ const navLabel = (view, role) =>
     pl: "P&L",
     settings: "Settings",
     teamqa: "Team QA",
+    communication: "Client communication",
     syslog: "System log",
     projects: "Projects",
     deadlines: "Deadlines",
@@ -138,6 +77,7 @@ const navLabel = (view, role) =>
   })[view];
 
 /** Dashboard gets shortcut children (Tasks / Finance / Follow-ups) like the original sidebar. */
+const DASHBOARD_CHILDREN = [["tasks", "Tasks"], ["finance", "Finance"], ["followups", "Follow-ups"]];
 
 /** Roles whose Dashboard has no shortcut children. */
 const NO_DASHBOARD_CHILDREN = ["PM", "PC"];
