@@ -13,17 +13,22 @@ export const taskTrack = (t) => t.track || trackOf(t);
 
 export const DEV_TRACK = (t) => ["frontend", "backend", "devops"].includes(taskTrack(t));
 
-export const needsAccept = (t) => DEV_TRACK(t) && t.assignee && t.assignee !== "Unassigned" && !t.selfCreated;
+export const needsAccept = (t) =>
+  ["frontend", "backend", "devops", "qa"].includes(taskTrack(t)) &&
+  t.assignee &&
+  t.assignee !== "Unassigned" &&
+  !t.selfCreated;
 
-/** The developer track owned by a role, or null. */
+/** The developer or tester track owned by a role, or null. */
 export const roleTrack = (role) =>
-  role === "Frontend" ? "frontend" : role === "Backend" ? "backend" : role === "DevOps" ? "devops" : null;
+  role === "Frontend" ? "frontend" : role === "Backend" ? "backend" : role === "DevOps" ? "devops" : role === "Tester" ? "qa" : null;
 
 /** Which task-flow role the current app role plays for this task. */
 export const roleFor = (role, t) => {
   if (role === "Frontend") return taskTrack(t) === "frontend" ? "Assignee" : "None";
   if (role === "Backend") return taskTrack(t) === "backend" ? "Assignee" : "None";
   if (role === "DevOps") return taskTrack(t) === "devops" ? "Assignee" : "None";
+  if (role === "Tester") return taskTrack(t) === "qa" || ["Tester", "Divya"].includes(t.assignee) ? "Assignee" : "Tester";
   if (role === "Client") return "None";
   if (role === "Admin" || role === "SuperAdmin") return "PM";
   return role;

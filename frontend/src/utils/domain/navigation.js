@@ -23,7 +23,9 @@ export const getNavCounts = memoLast((data, full, role) => {
     return {
       dashboard: 0,
       mywork: data.tasks.filter((t) => !isDone(t) && t.acceptance !== "pending" && t.assignee !== "Unassigned" && taskTrack(t) === myTrack).length,
-      inbox: data.tasks.filter((t) => t.acceptance === "pending" && taskTrack(t) === myTrack).length,
+      inbox: role === "Tester"
+        ? data.tasks.filter((t) => t.acceptance === "pending" && (t.assignee === "Divya" || t.assignee === "Tester")).length
+        : data.tasks.filter((t) => t.acceptance === "pending" && taskTrack(t) === myTrack).length,
       qa: data.tasks.filter((t) => t.status === "devdone").length + data.bugs.filter((b) => b.status === "Fixed").length,
       client: 0,
       audit: 0,

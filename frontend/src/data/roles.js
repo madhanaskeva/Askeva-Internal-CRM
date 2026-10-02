@@ -16,7 +16,7 @@ export const ROLE_NAV = {
   PC: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team", "tasks", "followups"],
   Frontend: ["mywork", "inbox", "tasks", "audit"],
   Backend: ["mywork", "inbox", "tasks", "audit"],
-  Tester: ["qa", "tasks", "audit"],
+  Tester: ["qa", "inbox", "tasks", "audit"],
   DevOps: ["deploy", "mywork", "inbox", "tasks", "audit"],
   Client: ["client"],
 };

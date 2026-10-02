@@ -15,6 +15,8 @@ export default function InboxCard({ t }) {
   const dispatch = useDispatch();
   const run = useAction();
   const note = useSelector((s) => s.ui.actionNote);
+  const latestNote = (t.raw?.history || []).slice().reverse().find((h) => h.note)?.note;
+
   return (
     <div className="inbox-card stack gap-8">
       <div className="row row--between row--wrap gap-8">
@@ -27,6 +29,7 @@ export default function InboxCard({ t }) {
         <Pill size="xs" tone={t.priorityTone}>{t.priority}</Pill>
       </div>
       {t.handoverPending && <div className="dashed-note">Handed over · {t.handoverLabel} — {t.handoverNote}</div>}
+      {latestNote && <div className="fs-11 text-muted"><strong>Changes / Details:</strong> {latestNote}</div>}
       <div className="meta">References · {t.ref}</div>
       <div className="row row--wrap gap-6">
         <PillButton size="sm" tone="green" className="inbox-card__accept" onClick={() => run(acceptTask, t.id)}>Accept</PillButton>

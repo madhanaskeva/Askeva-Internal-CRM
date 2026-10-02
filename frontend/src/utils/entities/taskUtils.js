@@ -30,8 +30,23 @@ export function deleteTask(ctx, { taskId }) {
 
 export function editTaskRecord(ctx, { taskId, updates }) {
   tasks.update(taskId, (t) => {
+    const prevAssignee = t.assignee;
     Object.assign(t, updates);
-    if (updates.assignee) t.track = trackOf(t);
+    if (updates.assignee) {
+      t.track = trackOf(t);
+      if (updates.assignee !== prevAssignee) {
+        t.history.push({ date: ctx.date, actor: ctx.actor, role: ctx.role, from: t.status, to: t.status, note: `Reassigned ${prevAssignee} → ${updates.assignee}` });
+        if (needsAccept(t)) {
+          t.acceptance = "pending";
+          t.assignedOn = ctx.date;
+          t.assignedBy = ctx.actor;
+          t.acceptedOn = null;
+          t.declinedBy = null;
+        } else {
+          t.acceptance = null;
+        }
+      }
+    }
   });
   addLog(ctx, "Updated task " + taskId);
 }

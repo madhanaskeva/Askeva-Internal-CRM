@@ -7,18 +7,22 @@ import { mapTask } from "./views";
 
 const projectOf = (data, id) => data.projects.find((p) => p.id === id) || {};
 
-/** Requirement reference line shown to a developer for a project, per track. */
+/** Requirement reference line shown to a developer or tester for a project, per track. */
 const refFor = (track, p) =>
   track === "frontend"
     ? `Design system ${((p.gates || {})[4] || {}).dsApproved ? "approved" : "pending approval"} · UI documentation · ${p.projectType || "—"}`
     : track === "devops"
       ? `${p.server || "server TBD"} · ${p.domain || "domain TBD"} · ${p.cloud || "no cloud elements"}`
-      : `Architecture ${((p.gates || {})[5] || {}).arch ? "approved by Senior Dev" : "not yet approved"} · BRD · ${p.server || "—"}`;
+      : track === "qa"
+        ? `QA Testing Plan · Test cases · ${p.projectType || "—"}`
+        : `Architecture ${((p.gates || {})[5] || {}).arch ? "approved by Senior Dev" : "not yet approved"} · BRD · ${p.server || "—"}`;
 
 export function buildDevWork(data, role, H) {
-  const track = roleTrack(role);
-  const myTasks = track ? data.tasks.filter((t) => taskTrack(t) === track) : [];
-  const myBugs = track ? data.bugs.filter((b) => (FRONT.includes(b.developer) && track === "frontend") || (BACK.includes(b.developer) && track === "backend")) : [];
+  const track = role === "Tester" ? "qa" : roleTrack(role);
+  const myTasks = role === "Tester"
+    ? data.tasks.filter((t) => t.assignee === "Divya" || t.assignee === "Tester" || taskTrack(t) === "qa")
+    : track ? data.tasks.filter((t) => taskTrack(t) === track) : [];
+  const myBugs = track ? data.bugs.filter((b) => (FRONT.includes(b.developer) && track === "frontend") || (BACK.includes(b.developer) && track === "backend") || (track === "qa" && (b.tester === "Divya" || b.tester === "Tester"))) : [];
   const map = (t) => mapTask(t, data);
 
   const inbox = myTasks

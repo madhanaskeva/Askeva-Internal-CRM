@@ -79,9 +79,10 @@ const handlers = {
     }
     const role = ctx.role;
     const project = getProjectById(form.projectId) || { stage: 0 };
-    const needsInbox = DEV_TRACK({ assignee: form.assignee }) && role !== "DevOps";
+    const track = trackOf({ assignee: form.assignee });
+    const needsInbox = ["frontend", "backend", "devops", "qa"].includes(track) && role !== "DevOps" && form.assignee !== "Unassigned";
     const task = {
-      id: "t" + uid(), projectId: form.projectId, title: form.title, assignee: form.assignee, track: trackOf({ assignee: form.assignee }), owner: "PC",
+      id: "t" + uid(), projectId: form.projectId, title: form.title, assignee: form.assignee, track, owner: "PC",
       createdBy: ctx.actor, due: form.due, stage: form.stage || STAGES[project.stage], status: "todo", priority: form.priority, blocked: false,
       ...(form.opsKind ? { opsKind: form.opsKind } : {}),
       ...(role === "DevOps" ? { selfCreated: true } : {}),
