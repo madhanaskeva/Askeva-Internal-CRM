@@ -130,6 +130,7 @@
   box-shadow: var(--shadow-card-sm);
   font-family: var(--font-body);
 }
+.pd-round-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Budget */
 .pd-alloc-row {

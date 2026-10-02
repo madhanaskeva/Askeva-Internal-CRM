@@ -79,7 +79,12 @@ export function setHold(ctx, { projectId, onHold, reason }) {
 }
 
 export function addRedesign(ctx, { projectId }) {
-  projects.update(projectId, (x) => { x.redesigns++; });
+  projects.update(projectId, (x) => { x.redesigns = (Number(x.redesigns) || 0) + 1; });
+  addLog(ctx);
+}
+
+export function removeRedesign(ctx, { projectId }) {
+  projects.update(projectId, (x) => { x.redesigns = Math.max(0, (Number(x.redesigns) || 0) - 1); });
   addLog(ctx);
 }
 

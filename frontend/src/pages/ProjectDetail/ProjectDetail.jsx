@@ -248,7 +248,6 @@ export default function ProjectDetail() {
       <Card className="pd-card">
         <div className="row row--between row--wrap gap-10 mb-10 items-center">
           <span className="label-caps fw-700 text-ink">Change requests · {lists.crs.length}</span>
-          <PillButton size="sm" className="pd-shadow-btn" onClick={() => open("cr")}>+ Change request</PillButton>
         </div>
         {lists.crs.length === 0 && <EmptyState>No change requests logged. Every out-of-scope ask goes here before any work starts.</EmptyState>}
         <div className="stack gap-8">

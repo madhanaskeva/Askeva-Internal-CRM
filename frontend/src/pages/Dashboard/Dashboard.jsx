@@ -102,7 +102,14 @@ export default function Dashboard() {
     <div className="page">
       <div className="grid-auto min-170 grid-gap-14">
         {stats.map((s) => (
-          <StatCard key={s.key} label={s.label} value={s.value} sub={s.sub} tone={s.tone} onClick={() => navigate(pathFor(s.view))} />
+          <StatCard
+            key={s.key}
+            label={s.label}
+            value={s.value}
+            sub={s.sub}
+            tone={s.tone}
+            onClick={s.view ? () => navigate(pathFor(s.view)) : undefined}
+          />
         ))}
       </div>
 
@@ -122,7 +129,7 @@ export default function Dashboard() {
       )}
 
       <div className="grid-auto min-230">
-        <Card onClick={() => navigate(pathFor("deadlines"))} className="stack gap-8">
+        <Card className="stack gap-8">
           <SectionLabel>Deadline health</SectionLabel>
           <StackedBar segments={a.deadline.map((s) => ({ key: s.label, pct: s.pct, tone: s.tone }))} />
           <div className="row row--wrap gap-12">
@@ -136,7 +143,7 @@ export default function Dashboard() {
           <div className="meta">{a.overdueMs} milestones overdue across portfolio</div>
         </Card>
 
-        <Card onClick={() => navigate(pathFor("deadlines"))} className="stack gap-8">
+        <Card className="stack gap-8">
           <SectionLabel>Timeline</SectionLabel>
           <div className="grid-2">
             <div>
@@ -154,7 +161,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card onClick={() => navigate(pathFor("finance"))} className="stack gap-8">
+        <Card className="stack gap-8">
           <SectionLabel>Cost management</SectionLabel>
           <div className="row row--between meta">
             <span>Staff cost used</span>
@@ -173,7 +180,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card tone="ink800" onClick={() => navigate(pathFor("finance"))} className="stack gap-8">
+        <Card tone="ink800" className="stack gap-8">
           <SectionLabel onDark>P&amp;L</SectionLabel>
           <div className="font-display text-lime dashboard-pl">{a.forecastPL}</div>
           <div className="meta text-meta">forecast profit · {a.margin} margin</div>
