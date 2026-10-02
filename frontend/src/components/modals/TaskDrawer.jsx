@@ -245,6 +245,7 @@ function TaskDrawerBody({ t, data }) {
                   </>
                 )}
               </div>
+              
               <div className="stack gap-4 divider-dashed-top">
                 {(b.history || []).slice().reverse().map((h, i) => (
                   <div key={i} className="fs-11 text-body">

@@ -10,10 +10,10 @@ export const OPS = ["Naveen", "DevOps"];
 
 /** Views each role may open, in sidebar order. The first entry is the role's landing view. */
 export const ROLE_NAV = {
-  SuperAdmin: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team", "pl", "finance", "salary", "settings", "syslog"],
-  Admin: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team", "pl", "finance", "salary", "settings"],
+  SuperAdmin: ["dashboard", "projects", "deadlines", "crs", "teamqa", "deploy", "audit", "team", "pl", "finance", "salary", "settings", "syslog"],
+  Admin: ["dashboard", "projects", "deadlines", "crs", "teamqa", "deploy", "audit", "team", "pl", "finance", "salary", "settings"],
   PM: ["dashboard", "projects", "deadlines", "crs", "teamqa", "deploy", "audit", "team"],
-  PC: ["dashboard", "projects", "deadlines", "crs", "communication", "teamqa", "deploy", "audit", "team", "tasks", "followups"],
+  PC: ["dashboard", "projects", "deadlines", "crs", "teamqa", "deploy", "audit", "team", "tasks", "followups"],
   Frontend: ["mywork", "inbox", "tasks", "audit"],
   Backend: ["mywork", "inbox", "tasks", "audit"],
   Tester: ["qa", "tasks", "audit"],

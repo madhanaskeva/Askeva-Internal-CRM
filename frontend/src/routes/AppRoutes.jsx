@@ -25,7 +25,7 @@ const PAGES = {
   teamqa: lazy(() => import("../pages/TeamQa/TeamQa")),
   audit: lazy(() => import("../pages/DailyAudit/DailyAudit")),
   client: lazy(() => import("../pages/ClientPortal/ClientPortal")),
-  communication: lazy(() => import("../pages/Communication/Communication")),
+  
   tasks: lazy(() => import("../pages/Tasks/Tasks")),
   followups: lazy(() => import("../pages/FollowUps/FollowUps")),
   crs: lazy(() => import("../pages/ChangeRequests/ChangeRequests")),
