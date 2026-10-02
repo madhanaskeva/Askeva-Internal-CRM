@@ -10,7 +10,8 @@ import { taskOpened } from "../../redux/slices/uiSlice";
 import { cx } from "../../utils/helpers/classNames";
 import { personDetail, resolvePerson, resolveRange, teamPeople } from "../../utils/domain/team";
 import { PERSON_RANGES } from "../../data";
-import { useData } from "../../app/useCrm";
+import { useData, useAction } from "../../app/useCrm";
+import { moveBugStatus } from "../../utils/entities/bugUtils";
 
 const Section = ({ title, children }) => (
   <Card className="stack gap-8 team-card">
@@ -23,6 +24,7 @@ const Section = ({ title, children }) => (
 export default function Team() {
   const dispatch = useDispatch();
   const data = useData();
+  const act = useAction();
   const [params, setParams] = useSearchParams();
   const people = useMemo(() => teamPeople(data), [data]);
   const name = resolvePerson(people, params.get("person"));
@@ -108,40 +110,51 @@ export default function Team() {
 
         <Section title="Bugs · lifecycle">
           {person.bugs.map((b) => (
-            <button key={b.id} type="button" className="team-item" onClick={() => open(b.taskId)}>
+            <div key={b.id} className="team-item" onClick={() => open(b.taskId)}>
               <div className="row row--between row--wrap gap-8">
                 <span className="font-mono fs-10 fw-700 text-ink">{b.id} · {b.severity} · {b.project}</span>
                 <Pill size="xs" tone={b.statusTone}>{b.status}</Pill>
               </div>
               <div className="fs-12 text-ink">{b.desc}</div>
               <div className="row row--wrap gap-4">
-                {b.steps.map((s) => (
-                  <Pill key={s.label} size="xs" tone={s.done ? "ink" : "white"} className={s.done ? "" : "text-muted"}>
-                    {s.label} {s.date}
-                  </Pill>
-                ))}
+                {b.steps.map((s) => {
+                  const targetTo = !s.done
+                    ? s.label === "Fixed"
+                      ? "Fixed"
+                      : s.label === "Retest"
+                      ? "Retest"
+                      : s.label === "Verified"
+                      ? "Verified"
+                      : s.label === "Not a bug"
+                      ? "NotABug"
+                      : null
+                    : null;
+                  return (
+                    <Pill
+                      key={s.label}
+                      size="xs"
+                      tone={s.done ? "ink" : "white"}
+                      className={cx(s.done ? "" : "text-muted")}
+                      style={targetTo ? { cursor: "pointer" } : undefined}
+                      onClick={
+                        targetTo
+                          ? (e) => {
+                              e.stopPropagation();
+                              act(moveBugStatus, { bugId: b.id, to: targetTo });
+                            }
+                          : undefined
+                      }
+                    >
+                      {s.label} {s.date}
+                    </Pill>
+                  );
+                })}
               </div>
               <div className="fs-10 text-muted">Developer · {b.developer}</div>
-            </button>
+            </div>
           ))}
         </Section>
       </div>
-
-      <Card flush>
-        <div className="card-head">
-          <span className="section-title__text">Full history · chronological</span>
-          <span className="meta">Newest first · click a row to open the task</span>
-        </div>
-        {person.log.map((l) => (
-          <button key={l.key} type="button" className="team-log" onClick={() => open(l.taskId)}>
-            <span className="mono-meta">{l.date}</span>
-            <span className={`fs-11 fw-700 text-${l.color}`}>{l.text}</span>
-            <span className="fs-11 text-ink">
-              {l.ref} <span className="text-muted">{l.note}</span>
-            </span>
-          </button>
-        ))}
-      </Card>
     </div>
   );
 }

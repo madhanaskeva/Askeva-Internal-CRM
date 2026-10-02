@@ -57,8 +57,8 @@ export default function ChangeRequests() {
         type: c.kind,
         cost: c.cost,
         timeline: c.timeline,
-        status: c.status === "Approved" ? "Approved" : c.status === "Quoted" ? "Quoted" : "Pending Review",
-        statusTone: c.status === "Approved" ? "green" : c.status === "Quoted" ? "lime" : "white",
+        status: c.status === "Approved" ? "Approved" : c.status === "Rejected" ? "Rejected" : c.status === "Quoted" ? "Quoted" : "Pending Review",
+        statusTone: c.status === "Approved" ? "green" : c.status === "Rejected" ? "danger" : c.status === "Quoted" ? "lime" : "white",
         detail: c.detail || `${c.cost} · ${c.timeline}`,
       });
     });
@@ -259,4 +259,3 @@ export default function ChangeRequests() {
     </div>
   );
 }
-

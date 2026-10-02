@@ -1,7 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { CrEmailToggle, CrNextButton } from "../../components/cards/CrActions";
+import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import FollowupItem from "../../components/cards/FollowupItem";
 import TaskRow from "../../components/cards/TaskRow";
 import Card from "../../components/common/Card";
@@ -13,15 +12,13 @@ import { pathFor } from "../../utils/helpers/routes";
 import { useDispatch } from "react-redux";
 import { modalOpened } from "../../redux/slices/uiSlice";
 import { cx } from "../../utils/helpers/classNames";
-import { fmt } from "../../utils/helpers/date";
 import { isDone } from "../../utils/domain/tasks";
 import { mapCr, mapFollowup, mapTask } from "../../utils/domain/views";
 import MilestoneList from "../Deadlines/MilestoneList";
 import RevisionList from "../Deadlines/RevisionList";
-import BudgetCard from "./BudgetCard";
 import CommitmentsCard from "./CommitmentsCard";
 import StageGateCard from "./StageGateCard";
-import { useData, useDeadlineRows, useFinRows, useStrict } from "../../app/useCrm";
+import { useData, useDeadlineRows, useStrict } from "../../app/useCrm";
 
 function ArrowPagination({ currentPage, totalPages, totalItems, pageSize = 6, onPrev, onNext }) {
   if (totalPages <= 1) return null;
@@ -70,7 +67,7 @@ function ListCard({ title, action, onAction, pagination, children }) {
   );
 }
 
-/** Project detail — stages, gate, commitments, budget, tasks, follow-ups, deadlines, CRs. */
+/** Project detail — stages, gate, commitments, tasks, follow-ups, deadlines, CRs. */
 export default function ProjectDetail() {
   const { projectId } = useParams();
   const dispatch = useDispatch();
@@ -78,13 +75,25 @@ export default function ProjectDetail() {
   const data = useData();
   const strict = useStrict();
   const dl = useDeadlineRows().find((r) => r.id === projectId);
-  const fin = useFinRows().find((r) => r.id === projectId);
   const p = data.projects.find((x) => x.id === projectId);
 
   const [taskPage, setTaskPage] = useState(0);
   const [fuPage, setFuPage] = useState(0);
+  const [selectedStage, setSelectedStage] = useState(p?.stage ?? 0);
+  const gateRef = useRef(null);
+  const scrollToGateOnChange = useRef(false);
   const taskPageSize = 10;
   const fuPageSize = 5;
+
+  useEffect(() => {
+    setSelectedStage(p?.stage ?? 0);
+  }, [p?.id, p?.stage]);
+
+  useEffect(() => {
+    if (!scrollToGateOnChange.current) return;
+    scrollToGateOnChange.current = false;
+    requestAnimationFrame(() => gateRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }, [selectedStage]);
 
   const lists = useMemo(() => {
     if (!p) return null;
@@ -125,28 +134,49 @@ export default function ProjectDetail() {
   }
 
   const open = (kind, extra = {}) => dispatch(modalOpened({ kind, extra: { projectId: p.id, ...extra } }));
+  const editStage = (stage) => {
+    if (stage !== selectedStage) scrollToGateOnChange.current = true;
+    setSelectedStage(stage);
+    if (stage === selectedStage) {
+      requestAnimationFrame(() => gateRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  };
+  const returnToCurrentStage = () => {
+    if (selectedStage !== p.stage) {
+      scrollToGateOnChange.current = true;
+      setSelectedStage(p.stage);
+    } else {
+      requestAnimationFrame(() => gateRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  };
 
   return (
     <div className="page">
       <div className="row row--wrap gap-10 pd-crumbs">
         <button type="button" className="link-inline" onClick={() => navigate(pathFor("projects"))}>← All projects</button>
-        <span className="mono-meta">{p.code} · {p.billing} billing · Sales: {p.salesOwner} · Started {fmt(p.start)}</span>
       </div>
 
-      <div className="row row--wrap gap-6">
+      <div className="row row--wrap gap-6 items-center">
         {STAGES.map((s, i) => (
-          <div key={s} className={cx("pd-stage", i < p.stage ? "tone-ink" : i === p.stage ? "tone-lime pd-stage--current" : "tone-white")}>
+          <div key={s} className={cx("pd-stage", i < p.stage ? "tone-ink" : i === p.stage ? "tone-lime pd-stage--current" : "tone-white", i === selectedStage && "pd-stage--editing")}>
             <span className="font-mono fs-10">{String(i).padStart(2, "0")}</span> · {s}
+            <button
+              type="button"
+              className="pd-stage__edit-btn"
+              aria-label={`Edit ${s} stage`}
+              title={`Edit ${s}`}
+              onClick={() => editStage(i)}
+            >
+              <Pencil size={12} aria-hidden="true" />
+            </button>
           </div>
         ))}
       </div>
 
       <div className="grid-auto min-320">
-        <StageGateCard p={p} />
+        <StageGateCard key={`${p.id}-${selectedStage}`} ref={gateRef} p={p} stage={selectedStage} onSaved={returnToCurrentStage} />
         <CommitmentsCard p={p} />
       </div>
-
-      <BudgetCard p={p} fin={fin} />
 
       <div className="grid-auto min-320">
         <ListCard
@@ -195,7 +225,7 @@ export default function ProjectDetail() {
 
       {dl && (
         <Card className="stack gap-10 pd-card">
-          <div className="row row--between row--wrap gap-10">
+          <div className="row row--between row--wrap gap-10 items-center">
             <span className="label-caps fw-700 text-ink">Deadlines &amp; milestones · SOP §6</span>
             <div className="row row--wrap gap-10">
               <Pill size="md" bold tone={dl.statusTone}>{dl.status}</Pill>
@@ -216,7 +246,7 @@ export default function ProjectDetail() {
       )}
 
       <Card className="pd-card">
-        <div className="row row--between row--wrap gap-10 mb-10">
+        <div className="row row--between row--wrap gap-10 mb-10 items-center">
           <span className="label-caps fw-700 text-ink">Change requests · {lists.crs.length}</span>
           <PillButton size="sm" className="pd-shadow-btn" onClick={() => open("cr")}>+ Change request</PillButton>
         </div>
@@ -231,9 +261,7 @@ export default function ProjectDetail() {
               </div>
               <div className="pd-cr__side">
                 <Pill tone={c.statusTone} className="pd-cr__pill">{c.status}</Pill>
-                <CrNextButton cr={c} />
               </div>
-              {c.needsEmail && <CrEmailToggle cr={c} />}
             </div>
           ))}
         </div>
@@ -241,4 +269,3 @@ export default function ProjectDetail() {
     </div>
   );
 }
-

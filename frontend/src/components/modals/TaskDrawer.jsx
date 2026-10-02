@@ -1,11 +1,13 @@
-import { Drawer, Select } from "antd";
-import { ASSIGNEE_BASE, MANAGERS, RELEASE_STATE_TEXT, ROLE_LABEL, TERMINAL, TS_LABEL } from "../../data";
+import { useState } from "react";
+import { Drawer, Select, Input } from "antd";
+import { Check } from "lucide-react";
+import { ASSIGNEE_BASE, MANAGERS, RELEASE_STATE_TEXT, ROLE_LABEL, TASK_STATUSES, TERMINAL, TS_LABEL } from "../../data";
 import { useDispatch, useSelector } from "react-redux";
 import { selectRole } from "../../redux/selectors";
-import { actionNoteChanged, taskClosed } from "../../redux/slices/uiSlice";
+import { actionNoteChanged, taskClosed, toastShown } from "../../redux/slices/uiSlice";
 import { requestStaging } from "../../utils/actions/releaseActions";
 import {
-  acceptTask, ackHandover, declineTask, forceCloseTask, handOverTask, moveBug, moveTask, reassignTask, toggleBlock,
+  acceptTask, ackHandover, declineTask, handOverTask, moveBug, moveTask, reassignTask, toggleBlock,
 } from "../../utils/actions/taskActions";
 import { fmt } from "../../utils/helpers/date";
 import { canMove, isDone, roleFor, taskTrack, trackOf, transitionsFor } from "../../utils/domain/tasks";
@@ -15,7 +17,7 @@ import Card from "../common/Card";
 import NoteInput from "../common/NoteInput";
 import Pill from "../common/Pill";
 import PillButton from "../common/PillButton";
-import { useAction, useData, useStrict } from "../../app/useCrm";
+import { useAction, useData } from "../../app/useCrm";
 
 const historyChange = (h) =>
   h.from && h.from !== h.to ? `${TS_LABEL[h.from]} → ${TS_LABEL[h.to]}`
@@ -54,8 +56,24 @@ function TaskDrawerBody({ t, data }) {
   const dispatch = useDispatch();
   const run = useAction();
   const role = useSelector(selectRole);
-  const strict = useStrict();
   const note = useSelector((s) => s.ui.actionNote);
+  const [showBlockInput, setShowBlockInput] = useState(false);
+  const [blockReason, setBlockReason] = useState("");
+
+  const handleBlockSubmit = () => {
+    const r = blockReason.trim();
+    if (!r) {
+      dispatch(toastShown("A reason is mandatory to block a task."));
+      return;
+    }
+    dispatch(actionNoteChanged(r));
+    const res = run(toggleBlock, t.id, r);
+    if (res && res.ok !== false) {
+      setBlockReason("");
+      setShowBlockInput(false);
+    }
+  };
+
   const m = mapTask(t, data);
   const project = data.projects.find((p) => p.id === t.projectId) || {};
   const flowRole = roleFor(role, t);
@@ -182,6 +200,51 @@ function TaskDrawerBody({ t, data }) {
           onChange={(v) => dispatch(actionNoteChanged(v))}
           placeholder="Note for this action (mandatory for Block; recorded in history)"
         />
+
+        {/* Task Progress Checkboxes with Automatic Cumulative Ticking */}
+        <div className="stack gap-6 p-10 bg-paper br-md border-ink">
+          <div className="fs-12 fw-700 text-ink row row--between items-center">
+            <span>Task Progress Status:</span>
+            <span className="fs-11 text-muted">Current: <strong className="text-ink">{TS_LABEL[t.status]}</strong></span>
+          </div>
+
+          <div className="row row--wrap gap-8 mt-2">
+            {["doing", "devdone", "testing", "passed", "closed"].map((st) => {
+              const order = ["todo", "doing", "devdone", "testing", "passed", "closed"];
+              const currentIdx = order.indexOf(t.status);
+              const stIdx = order.indexOf(st);
+              const isChecked = currentIdx > 0 && stIdx <= currentIdx;
+              const isCurrent = t.status === st;
+              return (
+                <label
+                  key={st}
+                  className={`row gap-6 items-center fs-11 font-mono cursor-pointer px-8 py-4 br-sm ${
+                    isCurrent
+                      ? "bg-lime-light border-lime fw-700 text-ink"
+                      : isChecked
+                      ? "bg-paper border-ink fw-600 text-ink"
+                      : "bg-white border-divider text-muted"
+                  }`}
+                  onClick={() => {
+                    if (!isCurrent) {
+                      run(moveTask, t.id, st, note);
+                    }
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => {}}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <span>{TS_LABEL[st]}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Action pill buttons */}
         <div className="row row--wrap gap-6">
           {actions.map((a) => (
             <PillButton
@@ -198,14 +261,58 @@ function TaskDrawerBody({ t, data }) {
           {t.status === "closed" ? (
             <span className="fs-11 text-muted">Closed — no further transitions.</span>
           ) : (
-            <PillButton size="sm" onClick={() => run(toggleBlock, t.id)}>{t.blocked ? "Unblock" : "Block (reason required)"}</PillButton>
-          )}
-          {!TERMINAL.includes(t.status) && isManager && (
-            <PillButton size="xs" tone="transparent" dashed dangerText onClick={() => run(forceCloseTask, t.id)}>
-              {strict ? "Force close (locked by strictGates)" : "Force close — override"}
+            <PillButton
+              size="sm"
+              tone={t.blocked ? "danger" : showBlockInput ? "lime" : "default"}
+              onClick={() => {
+                if (t.blocked) {
+                  run(toggleBlock, t.id);
+                } else {
+                  setShowBlockInput((prev) => !prev);
+                }
+              }}
+            >
+              {t.blocked ? "Unblock" : "Block (reason required)"}
             </PillButton>
           )}
         </div>
+
+        {/* Block Reason Input Box (Image 2 reference) with Right-Side Tick Icon */}
+        {showBlockInput && !t.blocked && (
+          <div className="row gap-6 items-center w-full mt-4">
+            <Input
+              className="brand-input input-pill w-full"
+              value={blockReason}
+              placeholder="Note for this action (mandatory for Block; recorded in history)"
+              onChange={(e) => setBlockReason(e.target.value)}
+              onPressEnter={handleBlockSubmit}
+              autoFocus
+              suffix={
+                <button
+                  type="button"
+                  className="row row--center items-center"
+                  style={{
+                    border: "none",
+                    background: "var(--lime-400)",
+                    color: "var(--ink-900)",
+                    borderRadius: "50%",
+                    width: "22px",
+                    height: "22px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onClick={handleBlockSubmit}
+                  title="Submit block reason"
+                >
+                  <Check size={14} />
+                </button>
+              }
+            />
+          </div>
+        )}
+
         <div className="meta">
           Flow: To do → In progress → Dev completed → Testing → Passed / Failed → Rework → … → Closed. Only the Tester can Pass or Fail; Close only after Passed. Completion dates are stamped by the system — no backdating.
         </div>

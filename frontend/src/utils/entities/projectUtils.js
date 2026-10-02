@@ -34,9 +34,10 @@ export function toggleGate(ctx, { projectId, stage, key }) {
 }
 
 /** Advance one stage; records an override when the gate was incomplete. */
-export function advanceStage(ctx, { projectId }) {
+export function advanceStage(ctx, { projectId, gates }) {
   projects.update(projectId, (x) => {
     const n = x.stage;
+    if (gates) x.gates[n] = { ...(x.gates[n] || {}), ...gates };
     const items = GATES[n].items;
     const missing = items.filter(([k]) => !(x.gates[n] && x.gates[n][k])).map(([, l]) => l);
     if (items.length && missing.length) {
@@ -44,6 +45,14 @@ export function advanceStage(ctx, { projectId }) {
       x.overrides.push({ date: ctx.date, stage: n, missing });
     }
     x.stage++;
+  });
+  addLog(ctx);
+}
+
+/** Save checklist edits for a stage without changing project progress. */
+export function saveStageGate(ctx, { projectId, stage, gates }) {
+  projects.update(projectId, (x) => {
+    x.gates[stage] = { ...(x.gates[stage] || {}), ...gates };
   });
   addLog(ctx);
 }

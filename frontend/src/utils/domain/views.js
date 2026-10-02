@@ -126,7 +126,7 @@ export function mapCr(c, data, strict) {
     project: p.client,
     detail: `${c.cost} · ${c.timeline}`,
     status: c.status,
-    statusTone: approved ? "green" : c.status === "Quoted" ? "lime" : "white",
+    statusTone: approved ? "green" : c.status === "Rejected" ? "danger" : c.status === "Quoted" ? "lime" : "white",
     rowTone: approved ? "cream" : "white",
     needsEmail: c.status === "Quoted",
     email: !!c.email,

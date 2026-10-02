@@ -7,32 +7,47 @@ import { toastShown } from "../../redux/slices/uiSlice";
 import { cx } from "../../utils/helpers/classNames";
 import { fmt } from "../../utils/helpers/date";
 import { useAction, useStrict } from "../../app/useCrm";
-import { advanceStage, setHold, toggleGate as toggleGateItem } from "../../utils/entities/projectUtils";
+import { advanceStage, saveStageGate, setHold } from "../../utils/entities/projectUtils";
 
 /**
  * Dark stage-gate card: checklist for the current SOP stage, advance / override,
- * on-hold toggle (reason captured in a modal — the original used window.prompt).
+ * on-hold toggle (reason captured in a modal).
  */
-export default function StageGateCard({ p }) {
+export default function StageGateCard({ p, stage = p.stage, onSaved, ...cardProps }) {
   const dispatch = useDispatch();
   const run = useAction();
   const strict = useStrict();
   const [holdOpen, setHoldOpen] = useState(false);
   const [reason, setReason] = useState("");
 
-  const n = p.stage;
+  const n = stage;
   const items = GATES[n].items;
-  const isOn = (k) => !!(p.gates[n] && p.gates[n][k]);
+  const [draftGates, setDraftGates] = useState(() => ({ ...(p.gates[n] || {}) }));
+  const isCurrentStage = n === p.stage;
+  const isOn = (k) => !!draftGates[k];
   const doneCount = items.filter(([k]) => isOn(k)).length;
   const gateOk = !items.length || items.every(([k]) => isOn(k));
-  const locked = n >= COMPLETED_STAGE || (strict && !gateOk);
+  const locked = isCurrentStage && (n >= COMPLETED_STAGE || (strict && !gateOk));
   const nextLabel = `${n + 1} · ${STAGES[n + 1]}`;
-  const advLabel = n >= COMPLETED_STAGE ? "Completed" : gateOk || strict ? `Advance to ${nextLabel}` : `Override gate → ${nextLabel}`;
+  const advLabel = !isCurrentStage ? "Save changes" : n >= COMPLETED_STAGE ? "Completed" : gateOk || strict ? `Advance to ${nextLabel}` : `Override gate → ${nextLabel}`;
   const advTone = locked ? "locked" : gateOk ? "lime" : "danger";
   const progress = items.length ? `${doneCount}/${items.length} complete${gateOk ? " — gate open" : strict ? " — gate locked" : " (gates not enforced)"}` : "";
 
-  const toggleGate = (key) => run(toggleGateItem, { projectId: p.id, stage: n, key });
-  const advance = () => !locked && run(advanceStage, { projectId: p.id });
+  const toggleGate = (key) => setDraftGates((current) => ({ ...current, [key]: !current[key] }));
+
+  const advance = () => {
+    if (isCurrentStage) {
+      if (locked) return;
+      run(advanceStage, { projectId: p.id, gates: draftGates });
+      const nextStageName = n + 1 < STAGES.length ? `${n + 1} · ${STAGES[n + 1]}` : "Completed";
+      dispatch(toastShown(`Advanced project ${p.code} to stage ${nextStageName}`));
+    } else {
+      const result = run(saveStageGate, { projectId: p.id, stage: n, gates: draftGates });
+      if (result.ok === false) return;
+      dispatch(toastShown(`Saved changes for stage ${n} · ${STAGES[n]}`));
+      onSaved?.();
+    }
+  };
 
   const toggleHold = () => {
     if (p.onHold) run(setHold, { projectId: p.id, onHold: false });
@@ -41,6 +56,7 @@ export default function StageGateCard({ p }) {
       setHoldOpen(true);
     }
   };
+
   const confirmHold = () => {
     const r = reason.trim();
     if (!r) {
@@ -52,9 +68,10 @@ export default function StageGateCard({ p }) {
   };
 
   return (
-    <Card tone="ink800" className="stack gap-12 pd-gate">
+    <Card {...cardProps} tone="ink800" className="stack gap-12 pd-gate">
       <div className="label-caps text-lime">Stage gate · {n} · {STAGES[n]}</div>
       <div className="fs-12-5">{GATES[n].hint}</div>
+
       <div className="stack gap-6">
         {items.map(([k, label]) => (
           <button key={k} type="button" className="pd-gate__item" onClick={() => toggleGate(k)}>

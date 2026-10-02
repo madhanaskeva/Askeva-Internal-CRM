@@ -1,17 +1,18 @@
 import { useMemo, useState } from "react";
+import { DatePicker, Select } from "antd";
+import dayjs from "dayjs";
+import { Calendar, Briefcase, Folder } from "lucide-react";
 import Card from "../../components/common/Card";
-import Pill from "../../components/common/Pill";
 import PillButton from "../../components/common/PillButton";
 import { useNavigate } from "react-router-dom";
 import { pathFor } from "../../utils/helpers/routes";
 import { useSelector } from "react-redux";
 import { selectRole } from "../../redux/selectors";
 import { cx } from "../../utils/helpers/classNames";
-import { TODAY, addDays } from "../../utils/helpers/date";
-import { auditDateLabel, auditRows, auditTotals } from "../../utils/domain/audit";
+import { TODAY } from "../../utils/helpers/date";
+import { auditRows } from "../../utils/domain/audit";
 import { teamPeople } from "../../utils/domain/team";
-import { useAction, useData, useMe } from "../../app/useCrm";
-import { signAudit } from "../../utils/entities/ruleUtils";
+import { useData, useMe } from "../../app/useCrm";
 
 const Col = ({ title, titleClass = "text-muted", children, last }) => (
   <div className={cx("audit-col", last && "audit-col--last")}>
@@ -20,51 +21,113 @@ const Col = ({ title, titleClass = "text-muted", children, last }) => (
   </div>
 );
 
-/** Daily audit — person → date → assigned → done → blocked → evidence, with PC/PM sign-offs. */
+/** Daily audit — Date, Role & Project filters with instant real-time updates. */
 export default function DailyAudit() {
-  const run = useAction();
   const navigate = useNavigate();
   const data = useData();
-  const role = useSelector(selectRole);
+  const userRole = useSelector(selectRole);
   const me = useMe();
-  const [date, setDate] = useState(TODAY);
 
-  const rows = useMemo(() => auditRows(data, teamPeople(data), date, role, me), [data, date, role, me]);
-  const sign = (key, who) => run(signAudit, { key, who });
+  const [date, setDate] = useState(TODAY);
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [projectFilter, setProjectFilter] = useState("all");
+
+  const peopleList = useMemo(() => teamPeople(data), [data]);
+  const roleOptions = useMemo(() => Array.from(new Set(peopleList.map((p) => p.role))).filter(Boolean), [peopleList]);
+  const projectOptions = useMemo(() => (data.projects || []).map((p) => ({ value: p.id, label: p.client || p.name })), [data]);
+
+  const rows = useMemo(
+    () => auditRows(data, peopleList, date, date, userRole, me),
+    [data, peopleList, date, userRole, me]
+  );
+
+  const filteredRows = useMemo(() => {
+    return rows.filter((a) => {
+      const matchesRole = roleFilter === "all" || a.role === roleFilter;
+      const matchesProject =
+        projectFilter === "all" ||
+        (data.tasks || []).some(
+          (t) =>
+            t.projectId === projectFilter &&
+            (t.assignee === a.person ||
+              (t.history || []).some(
+                (h) => h.actor === a.person && h.date === date
+              ))
+        );
+      return matchesRole && matchesProject;
+    });
+  }, [rows, roleFilter, projectFilter, data, date]);
 
   return (
     <div className="page">
-      <div className="row row--between row--wrap gap-12">
-        <div className="row gap-8">
-          <button type="button" className="audit-nav-btn" aria-label="Previous day" onClick={() => setDate((d) => addDays(d, -1))}>←</button>
-          <span className="font-display text-ink audit-date">{auditDateLabel(date)}</span>
-          <button type="button" className="audit-nav-btn" aria-label="Next day" onClick={() => date < TODAY && setDate((d) => addDays(d, 1))}>→</button>
-          <PillButton size="xs" onClick={() => setDate(TODAY)}>Today</PillButton>
-        </div>
-        <span className="fs-11 text-muted">{auditTotals(rows)}</span>
-      </div>
+      {/* Filter Card */}
+      <Card className="mb-16 pd-card" style={{ padding: "16px 20px" }}>
+        <div className="grid-auto min-200 gap-16">
+          {/* Date */}
+          <div>
+            <label className="row gap-6 items-center fs-11 fw-700 text-ink mb-6">
+              <Calendar size={13} className="text-muted" /> Date
+            </label>
+            <DatePicker
+              value={date ? dayjs(date) : null}
+              onChange={(d) => setDate(d ? d.format("YYYY-MM-DD") : TODAY)}
+              format="DD-MM-YYYY"
+              allowClear={false}
+              className="w-full brand-input"
+              style={{ borderRadius: "8px" }}
+            />
+          </div>
 
+          {/* Role */}
+          <div>
+            <label className="row gap-6 items-center fs-11 fw-700 text-ink mb-6">
+              <Briefcase size={13} className="text-muted" /> Role
+            </label>
+            <Select
+              value={roleFilter}
+              onChange={setRoleFilter}
+              className="w-full brand-select"
+              style={{ borderRadius: "8px" }}
+              options={[
+                { value: "all", label: "All roles" },
+                ...roleOptions.map((r) => ({ value: r, label: r })),
+              ]}
+            />
+          </div>
+
+          {/* Project */}
+          <div>
+            <label className="row gap-6 items-center fs-11 fw-700 text-ink mb-6">
+              <Folder size={13} className="text-muted" /> Project
+            </label>
+            <Select
+              value={projectFilter}
+              onChange={setProjectFilter}
+              className="w-full brand-select"
+              style={{ borderRadius: "8px" }}
+              options={[
+                { value: "all", label: "All projects" },
+                ...projectOptions,
+              ]}
+            />
+          </div>
+        </div>
+      </Card>
+
+      {/* Tabular Audit Cards */}
       <div className="stack gap-12">
-        {rows.map((a) => (
+        {filteredRows.map((a) => (
           <Card key={a.key} flush>
-            <div className={cx("audit-head", a.isIdle && "tone-rose")}>
+            <div className="audit-head">
               <div className="row row--baseline row--wrap gap-10">
                 <span className="font-display text-ink audit-person">{a.person}</span>
                 <span className="mono-meta">{a.role}</span>
-                {a.isIdle && <Pill size="xs" tone="danger">IDLE — assigned work, no activity</Pill>}
-                {a.noWork && <Pill size="xs" tone="paper">nothing assigned</Pill>}
               </div>
-              <div className="row row--wrap gap-8">
-                <span className="fs-11 fw-600 text-ink">{a.hoursLabel}</span>
+              <div className="row row--wrap gap-8 items-center">
+                {a.hours ? <span className="fs-11 fw-600 text-ink">{a.hours} h logged</span> : null}
                 {a.canOpenDetail && (
                   <PillButton size="xxs" onClick={() => navigate(pathFor("team") + `?person=${encodeURIComponent(a.person)}`)}>Full record →</PillButton>
                 )}
-                <button type="button" className={cx("pill pill--xs pill-btn", a.pcSigned ? "tone-green" : "tone-white")} disabled={a.pcSigned} onClick={() => sign(a.key, "pc")}>
-                  PC daily sign-off
-                </button>
-                <button type="button" className={cx("pill pill--xs pill-btn", a.pmSigned ? "tone-green" : "tone-white")} disabled={a.pmSigned} onClick={() => sign(a.key, "pm")}>
-                  PM review
-                </button>
               </div>
             </div>
             <div className="audit-summary">{a.summary}</div>
