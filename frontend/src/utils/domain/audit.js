@@ -9,10 +9,14 @@ const RELEASE_EVENT = { requested: "Requested deploy", deployed: "Deployed", rol
 
 export const auditKey = (person, date) => `${person}|${date}`;
 
-/** Everything one person did (and had pending) on one date. */
-export function auditFor(data, person, date) {
+/** Everything one person did (and had pending) between fromDate and toDate. */
+export function auditFor(data, person, fromDate, toDate = fromDate) {
+  const dFrom = fromDate || TODAY;
+  const dTo = toDate || dFrom;
+  const inRange = (d) => d && d >= dFrom && d <= dTo;
+
   const mine = data.tasks.filter((t) => t.assignee === person);
-  const ev = (t) => (t.history || []).filter((h) => h.date === date);
+  const ev = (t) => (t.history || []).filter((h) => inRange(h.date));
   const started = mine.filter((t) => ev(t).some((h) => h.to === "doing" && h.from !== h.to));
   const completed = mine.filter((t) => ev(t).some((h) => h.to === "devdone" && h.from !== h.to));
   const blocked = mine.flatMap((t) =>
@@ -20,43 +24,43 @@ export function auditFor(data, person, date) {
       .filter((h) => /^BLOCKED/.test(h.note || ""))
       .map((h) => ({ task: t.title, note: h.note.replace(/^BLOCKED — /, "") })),
   );
-  const assigned = mine.filter((t) => ((t.history || [])[0] || {}).date <= date && !(t.closedOn && t.closedOn < date));
+  const assigned = mine.filter((t) => ((t.history || [])[0] || {}).date <= dTo && !(t.closedOn && t.closedOn < dFrom));
   const pending = assigned.filter((t) => !isDone(t) && !completed.includes(t));
-  const bugsFixed = data.bugs.filter((b) => (b.history || []).some((h) => h.date === date && h.to === "Fixed" && h.actor === person));
-  const bugsRaised = data.bugs.filter((b) => b.raised === date && b.tester === person);
+  const bugsFixed = data.bugs.filter((b) => (b.history || []).some((h) => inRange(h.date) && h.to === "Fixed" && h.actor === person));
+  const bugsRaised = data.bugs.filter((b) => inRange(b.raised) && b.tester === person);
   const tests =
-    data.bugs.reduce((s, b) => s + (b.history || []).filter((h) => h.date === date && h.actor === person && ["Retest", "Verified", "Reopened", "NotABug"].includes(h.to)).length, 0) +
-    data.tasks.reduce((s, t) => s + (t.history || []).filter((h) => h.date === date && h.actor === person && ["passed", "failed", "testing"].includes(h.to) && h.from !== h.to).length, 0);
+    data.bugs.reduce((s, b) => s + (b.history || []).filter((h) => inRange(h.date) && h.actor === person && ["Retest", "Verified", "Reopened", "NotABug"].includes(h.to)).length, 0) +
+    data.tasks.reduce((s, t) => s + (t.history || []).filter((h) => inRange(h.date) && h.actor === person && ["passed", "failed", "testing"].includes(h.to) && h.from !== h.to).length, 0);
   const deployEv = (data.releases || []).flatMap((r) =>
     (r.history || [])
-      .filter((x) => x.date === date && x.actor === person)
+      .filter((x) => inRange(x.date) && x.actor === person)
       .map((x) => ({ task: `${r.id} · ${r.version} → ${r.env}`, text: RELEASE_EVENT[x.to] || x.to })),
   );
   const allocEv = data.tasks.flatMap((t) =>
     (t.history || [])
-      .filter((h) => h.date === date && h.actor === person && /^(ACCEPTED|DECLINED|HANDOVER —)/.test(h.note || ""))
+      .filter((h) => inRange(h.date) && h.actor === person && /^(ACCEPTED|DECLINED|HANDOVER —)/.test(h.note || ""))
       .map((h) => ({ task: t.title, text: h.note.replace(/^(ACCEPTED|DECLINED|HANDOVER) — /, (m) => m.replace(" — ", ": ")) })),
   );
   const lags = data.tasks
-    .filter((t) => t.acceptedOn === date && t.assignee === person)
+    .filter((t) => inRange(t.acceptedOn) && t.assignee === person)
     .map((t) => daysBetween(t.acceptedOn, t.assignedOn || t.acceptedOn));
   const avgLag = lags.length ? Math.round((lags.reduce((s, x) => s + x, 0) / lags.length) * 10) / 10 : null;
   const declinesTotal = data.tasks.reduce((s, t) => s + (t.history || []).filter((h) => h.actor === person && /^DECLINED/.test(h.note || "")).length, 0);
-  const crActions = data.crs.filter((c) => c.raised === date).length;
-  const fuDone = data.followups.filter((f) => (f.log || []).some((l) => l.date === date)).length;
+  const crActions = data.crs.filter((c) => inRange(c.raised)).length;
+  const fuDone = data.followups.filter((f) => (f.log || []).some((l) => inRange(l.date))).length;
   let days = 0;
   data.projects.forEach((p) =>
-    (p.effortLog || []).filter((e) => e.date === date && teamOf(p, e.role) === person).forEach((e) => {
+    (p.effortLog || []).filter((e) => inRange(e.date) && teamOf(p, e.role) === person).forEach((e) => {
       days += e.days;
     }),
   );
   const hours = days ? days * 8 : null;
   const activity =
     started.length + completed.length + blocked.length + bugsFixed.length + bugsRaised.length + tests + allocEv.length + deployEv.length + (person === "PC" ? crActions + fuDone : 0);
-  const so = (data.signoffs || {})[auditKey(person, date)] || {};
+  const so = (data.signoffs || {})[auditKey(person, dFrom)] || {};
   return {
     person,
-    key: auditKey(person, date),
+    key: auditKey(person, dFrom + "_" + dTo),
     assigned: assigned.map((t) => t.title),
     completed: completed.map((t) => ({ title: t.title, verified: isDone(t) ? "verified by tester" : t.status === "testing" ? "in testing" : "awaiting test" })),
     pending: pending.map((t) => t.title),
@@ -76,12 +80,12 @@ export function auditFor(data, person, date) {
 
 const SELF_ONLY = ["Frontend", "Backend", "Tester", "DevOps"];
 
-/** Audit rows for the given date; developers/testers only see themselves. */
-export function auditRows(data, people, date, role, me) {
+/** Audit rows for the given date or date range; developers/testers only see themselves. */
+export function auditRows(data, people, fromDate, toDate, role, me) {
   const visible = SELF_ONLY.includes(role) ? people.filter((p) => p.name === me) : people;
   const top = TOP_ROLES.includes(role);
   return visible.map((p) => {
-    const a = auditFor(data, p.name, date);
+    const a = auditFor(data, p.name, fromDate, toDate);
     const idle = a.activity === 0 && a.assigned.length > 0;
     return {
       ...a,

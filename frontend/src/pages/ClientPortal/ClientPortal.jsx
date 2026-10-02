@@ -91,8 +91,8 @@ export default function ClientPortal() {
               <div className="meta">Quotation {cr.cost} · timeline {cr.timeline}</div>
               {cr.isQuoted && (
                 <div className="row gap-6">
-                  <PillButton size="xs" tone="green" onClick={() => decideCr(cr.id, true)}>Accept quotation</PillButton>
-                  <PillButton size="xs" onClick={() => decideCr(cr.id, false)}>Decline</PillButton>
+                  <PillButton size="xs" tone="green" onClick={() => decideCr(cr.id, true)}>Approve</PillButton>
+                  <PillButton size="xs" onClick={() => decideCr(cr.id, false)}>Reject</PillButton>
                 </div>
               )}
             </div>

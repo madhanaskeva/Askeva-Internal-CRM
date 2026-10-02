@@ -28,3 +28,20 @@
 .audit-col__title { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px; }
 .audit-line { font-size: 11.5px; }
 .pill-btn:disabled { cursor: default; }
+
+.audit-date-picker-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  z-index: 10 !important;
+  cursor: pointer !important;
+}
+.audit-date-picker-overlay .ant-picker-input,
+.audit-date-picker-overlay input {
+  width: 100% !important;
+  height: 100% !important;
+  cursor: pointer !important;
+}
+

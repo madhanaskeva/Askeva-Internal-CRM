@@ -44,7 +44,7 @@ export const VIEW_TITLES = {
   mywork: ["", "My work"],
   qa: ["My daily activity", "QA dashboard"],
   client: ["Progress, approvals & pending items", "Client portal"],
-  audit: ["Person → date → assigned → done → blocked → evidence", "Daily audit"],
+  audit: ["", "Daily audit"],
   tasks: ["Task management", "Tasks"],
   followups: ["Follow-up management", "Follow-ups"],
   crs: ["Change request register · SOP §8", "Change requests"],

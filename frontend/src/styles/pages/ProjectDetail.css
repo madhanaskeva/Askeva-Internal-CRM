@@ -7,16 +7,52 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 6px 8px 6px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--ink-900);
   font-size: 11px;
   font-weight: 600;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
 }
 .pd-stage--current { box-shadow: var(--shadow-card-sm); }
+.pd-stage.pd-stage--editing {
+  background: var(--lime-400);
+  color: var(--ink-900);
+  border-color: var(--lime-400);
+  box-shadow: 0 0 0 2px var(--lime-400);
+}
+.pd-stage.tone-lime.pd-stage--editing {
+  border-color: var(--ink-900);
+  box-shadow: 0 0 0 2px var(--ink-900), var(--shadow-card-sm);
+}
+
+.pd-stage__edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 2px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+  line-height: 1;
+}
+.pd-stage__edit-btn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.12);
+  transform: scale(1.15);
+}
+.pd-stage.tone-ink .pd-stage__edit-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 
 /* Stage gate (dark card) */
-.card.pd-gate { padding: 18px; }
+.card.pd-gate { padding: 18px; scroll-margin-top: 16px; }
 .pd-gate__item {
   display: flex;
   gap: 10px;
@@ -155,4 +191,3 @@
   .card.pd-card,
   .card.pd-gate { padding: 14px; }
 }
-

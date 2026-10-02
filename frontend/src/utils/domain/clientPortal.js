@@ -44,8 +44,8 @@ export function buildClientPortal(data, cp, h) {
         cost: c.cost,
         timeline: c.timeline,
         status: c.status,
-        isQuoted: c.status === "Quoted" && !c.email,
-        tone: c.status === "Approved" ? "green" : c.status === "Quoted" ? "lime" : "white",
+        isQuoted: c.status === "Quoted",
+        tone: c.status === "Approved" ? "green" : c.status === "Rejected" ? "danger" : c.status === "Quoted" ? "lime" : "white",
       })),
     pending: data.followups
       .filter((f) => f.projectId === cp.id && f.status === "pending" && (f.court || "us") === "client")

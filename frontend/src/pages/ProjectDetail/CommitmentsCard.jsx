@@ -11,6 +11,7 @@ export default function CommitmentsCard({ p }) {
   return (
     <Card className="stack gap-10 pd-card">
       <div className="label-caps fw-700 text-ink">Client &amp; commitments</div>
+
       <div className="kv pd-kv">
         <span>SPOC</span>
         <strong className="text-ink">{p.spoc}</strong>
@@ -25,6 +26,7 @@ export default function CommitmentsCard({ p }) {
         <span>Daily call</span>
         <span>{p.callTime}</span>
       </div>
+
       <div className="row row--between gap-10 pd-redesign">
         <div>
           <div className="label-caps text-muted">UI redesign rounds</div>

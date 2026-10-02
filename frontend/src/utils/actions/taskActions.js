@@ -34,9 +34,9 @@ export function forceCloseTask(ctx, taskId) {
   return done({ clearNote: true });
 }
 
-export function toggleBlock(ctx, taskId) {
+export function toggleBlock(ctx, taskId, overrideNote) {
   const t = getTaskById(taskId);
-  const note = (ctx.note || "").trim();
+  const note = (overrideNote !== undefined ? overrideNote : ctx.note || "").trim();
   if (!t.blocked && !note) return refuse("A reason is mandatory to block a task.");
   toggleTaskBlock(ctx, { taskId, note, flowRole: roleFor(ctx.role, t) });
   return done({ clearNote: true });
