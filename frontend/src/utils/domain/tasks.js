@@ -22,19 +22,26 @@ export const isMyTask = (t, me) => t.assignee === me || (TRACK_POOL[taskTrack(t)
 
 export const DEV_TRACK = (t) => ["frontend", "backend", "devops"].includes(taskTrack(t));
 
-export const needsAccept = (t) => DEV_TRACK(t) && t.assignee && t.assignee !== "Unassigned" && !t.selfCreated;
+export const needsAccept = (t) =>
+  ["frontend", "backend", "devops", "qa"].includes(taskTrack(t)) &&
+  t.assignee &&
+  t.assignee !== "Unassigned" &&
+  !t.selfCreated;
 
-/** The developer track owned by a role, or null. */
+/** The developer or tester track owned by a role, or null. */
 export const roleTrack = (role) =>
-  role === "Frontend" ? "frontend" : role === "Backend" ? "backend" : role === "DevOps" ? "devops" : null;
+  role === "Frontend" ? "frontend" : role === "Backend" ? "backend" : role === "DevOps" ? "devops" : role === "Tester" ? "qa" : null;
 
 /**
  * Which task-flow role the current app role plays for this task. A developer is
  * the Assignee only of tasks on their track that are assigned to them (`me`).
+ * A tester is the Assignee of their own QA tasks and acts as "Tester" on everything else.
  */
 export const roleFor = (role, t, me) => {
   const track = roleTrack(role);
-  if (track) return taskTrack(t) === track && (!me || isMyTask(t, me)) ? "Assignee" : "None";
+  const mine = taskTrack(t) === track && (!me || isMyTask(t, me));
+  if (role === "Tester") return mine ? "Assignee" : "Tester";
+  if (track) return mine ? "Assignee" : "None";
   if (role === "Client") return "None";
   if (role === "Admin" || role === "SuperAdmin") return "PM";
   return role;

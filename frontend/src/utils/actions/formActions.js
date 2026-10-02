@@ -81,7 +81,7 @@ const handlers = {
     const project = getProjectById(form.projectId) || { stage: 0 };
     if (blank(form.assignee)) return "Pick who this task is assigned to";
     const track = trackForAssignee(form.assignee, getStaff());
-    const needsInbox = ["frontend", "backend", "devops"].includes(track) && role !== "DevOps";
+    const needsInbox = ["frontend", "backend", "devops", "qa"].includes(track) && role !== "DevOps" && form.assignee !== "Unassigned";
     const task = {
       id: "t" + uid(), projectId: form.projectId, title: form.title, assignee: form.assignee, track, owner: "PC",
       createdBy: ctx.actor, due: form.due, stage: form.stage || STAGES[project.stage], status: "todo", priority: form.priority, blocked: false,

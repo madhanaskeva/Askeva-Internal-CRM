@@ -2,24 +2,27 @@
 // `inboxTasks`, `inbox` and `mw` in renderVals.
 import { STAGES } from "../../data";
 import { TODAY, daysBetween, fmt } from "../helpers/date";
-import { isDone, roleTrack, taskTrack } from "./tasks";
+import { isDone, isMyTask, roleTrack, taskTrack } from "./tasks";
 import { mapTask } from "./views";
 
 const projectOf = (data, id) => data.projects.find((p) => p.id === id) || {};
 
-/** Requirement reference line shown to a developer for a project, per track. */
+/** Requirement reference line shown to a developer or tester for a project, per track. */
 const refFor = (track, p) =>
   track === "frontend"
     ? `Design system ${((p.gates || {})[4] || {}).dsApproved ? "approved" : "pending approval"} · UI documentation · ${p.projectType || "—"}`
     : track === "devops"
       ? `${p.server || "server TBD"} · ${p.domain || "domain TBD"} · ${p.cloud || "no cloud elements"}`
-      : `Architecture ${((p.gates || {})[5] || {}).arch ? "approved by Senior Dev" : "not yet approved"} · BRD · ${p.server || "—"}`;
+      : track === "qa"
+        ? `QA Testing Plan · Test cases · ${p.projectType || "—"}`
+        : `Architecture ${((p.gates || {})[5] || {}).arch ? "approved by Senior Dev" : "not yet approved"} · BRD · ${p.server || "—"}`;
 
-export function buildDevWork(data, role, H) {
+export function buildDevWork(data, role, H, me) {
   const track = roleTrack(role);
-  const myTasks = track ? data.tasks.filter((t) => taskTrack(t) === track) : [];
-  // `data` is already scoped to the signed-in developer (see scopeData).
-  const myBugs = track ? data.bugs : [];
+  // Developers: `data` is already scoped to them (see scopeData). Testers see every
+  // task, so keep only the QA tasks assigned to them (or the shared "Tester" pool).
+  const myTasks = !track ? [] : role === "Tester" ? data.tasks.filter((t) => taskTrack(t) === "qa" && isMyTask(t, me)) : data.tasks.filter((t) => taskTrack(t) === track);
+  const myBugs = !track ? [] : role === "Tester" ? data.bugs.filter((b) => b.tester === me || b.tester === "Tester") : data.bugs;
   const map = (t) => mapTask(t, data);
 
   const inbox = myTasks

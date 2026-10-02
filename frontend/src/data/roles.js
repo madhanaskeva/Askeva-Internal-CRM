@@ -21,7 +21,7 @@ export const ROLE_DEFAULT_NAME = { Frontend: "Rahul", Backend: "Farhan", DevOps:
 export const STAFF_TRACK = { "UI / Frontend": "frontend", Backend: "backend", "Senior Dev / Architect": "backend", DevOps: "devops", "Manual tester": "qa" };
 
 /** Shared pool assignees every developer of a track also picks up. */
-export const TRACK_POOL = { frontend: ["UI team"], backend: ["Dev team", "Senior Dev"], devops: ["DevOps"] };
+export const TRACK_POOL = { frontend: ["UI team"], backend: ["Dev team", "Senior Dev"], devops: ["DevOps"], qa: ["Tester"] };
 
 /** Views each role may open, in sidebar order. The first entry is the role's landing view. */
 export const ROLE_NAV = {
@@ -31,7 +31,7 @@ export const ROLE_NAV = {
   PC: ["dashboard", "projects", "deadlines", "crs", "teamqa", "deploy", "audit", "team", "tasks", "followups"],
   Frontend: ["mywork", "inbox", "tasks", "audit"],
   Backend: ["mywork", "inbox", "tasks", "audit"],
-  Tester: ["qa", "tasks", "audit"],
+  Tester: ["qa", "inbox", "tasks", "audit"],
   DevOps: ["deploy", "mywork", "inbox", "tasks", "audit"],
   Client: ["client"],
 };

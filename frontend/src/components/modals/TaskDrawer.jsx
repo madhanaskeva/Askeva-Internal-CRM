@@ -7,7 +7,7 @@ import { selectRole } from "../../redux/selectors";
 import { actionNoteChanged, taskClosed, toastShown } from "../../redux/slices/uiSlice";
 import { requestStaging } from "../../utils/actions/releaseActions";
 import {
-  acceptTask, ackHandover, declineTask, handOverTask, moveBug, moveTask, reassignTask, toggleBlock,
+  acceptTask, ackHandover, declineTask, handOverTask, moveBug, moveTask, reassignTask, toggleBlock, toggleChecklistItem,
 } from "../../utils/actions/taskActions";
 import { fmt } from "../../utils/helpers/date";
 import { canMove, isDone, roleFor, taskTrack, trackForAssignee, transitionsFor } from "../../utils/domain/tasks";
@@ -164,11 +164,52 @@ function TaskDrawerBody({ t, data }) {
           <div className="label-caps fw-700">This task is waiting for your acceptance</div>
           <div className="fs-11">Accept to start work (due date stays as set by PC) or decline with a reason — it then returns to the PC unassigned.</div>
           <div className="row row--wrap gap-6">
-            <PillButton size="sm" tone="green" onClick={() => run(acceptTask, t.id)}>Accept</PillButton>
+            <PillButton size="sm" tone="green" onClick={() => {
+              const res = run(acceptTask, t.id);
+              if (res && res.ok !== false) dispatch(toastShown("Task accepted successfully."));
+            }}>Accept Task</PillButton>
             <PillButton size="sm" dangerText onClick={() => run(declineTask, t.id)}>Decline (reason in note below)</PillButton>
           </div>
         </Card>
       )}
+
+      {/* Checklist / Focus Areas Section */}
+      <Card size="md" className="stack gap-8">
+        <div className="row row--between items-center">
+          <span className="label-caps fw-700 text-ink">Checklist / Focus Areas</span>
+          {(() => {
+            const list = t.checklist || [
+              { label: "Login with valid credentials", done: false },
+              { label: "Forgot password flow", done: false },
+              { label: "Role-based access", done: false },
+              { label: "Validation messages", done: false },
+              { label: "Session timeout & logout", done: false },
+            ];
+            const doneCnt = list.filter((i) => i.done).length;
+            const pct = Math.round((doneCnt / list.length) * 100);
+            return <span className="fs-11 font-mono text-muted">{doneCnt} / {list.length} completed ({pct}%)</span>;
+          })()}
+        </div>
+        <div className="stack gap-6">
+          {(t.checklist || [
+            { label: "Login with valid credentials", done: false },
+            { label: "Forgot password flow", done: false },
+            { label: "Role-based access", done: false },
+            { label: "Validation messages", done: false },
+            { label: "Session timeout & logout", done: false },
+          ]).map((item, idx) => (
+            <label key={idx} className="row gap-8 items-center fs-12 text-ink cursor-pointer hover-bg-paper p-4 br-sm">
+              <input
+                type="checkbox"
+                checked={!!item.done}
+                onChange={() => run(toggleChecklistItem, t.id, idx)}
+                style={{ cursor: "pointer" }}
+              />
+              <span className={item.done ? "line-through text-muted" : "fw-600"}>{item.label}</span>
+            </label>
+          ))}
+        </div>
+      </Card>
 
       {canRequestStaging && (
         <div className="row row--wrap gap-8">

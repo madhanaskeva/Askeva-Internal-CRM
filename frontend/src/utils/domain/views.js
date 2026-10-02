@@ -48,7 +48,7 @@ export function mapTask(t, data) {
     owner: t.owner || "PC",
     due: fmt(t.due),
     stage: t.stage,
-    project: projectOf(data, t.projectId).client,
+    project: projectOf(data, t.projectId).client || t.projectName || t.project || "Internal CRM",
     priority: t.priority,
     priorityTone: priorityTone(t.priority),
     status: TS_LABEL[t.status] || t.status,

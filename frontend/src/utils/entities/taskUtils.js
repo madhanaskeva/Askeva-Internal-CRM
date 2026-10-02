@@ -31,11 +31,24 @@ export function deleteTask(ctx, { taskId }) {
 
 export function editTaskRecord(ctx, { taskId, updates }) {
   tasks.update(taskId, (t) => {
-    const reassigned = updates.assignee && updates.assignee !== t.assignee;
+    const prevAssignee = t.assignee;
     Object.assign(t, updates);
-    if (updates.assignee) t.track = trackForAssignee(t.assignee, getStaff());
-    // A new developer must accept it again from their Inbox.
-    if (reassigned && needsAccept(t)) Object.assign(t, { acceptance: "pending", assignedOn: ctx.date, assignedBy: ctx.actor, acceptedOn: null });
+    if (updates.assignee) {
+      t.track = trackForAssignee(t.assignee, getStaff());
+      if (updates.assignee !== prevAssignee) {
+        t.history.push({ date: ctx.date, actor: ctx.actor, role: ctx.role, from: t.status, to: t.status, note: `Reassigned ${prevAssignee} → ${updates.assignee}` });
+        // The new assignee must accept it again from their Inbox.
+        if (needsAccept(t)) {
+          t.acceptance = "pending";
+          t.assignedOn = ctx.date;
+          t.assignedBy = ctx.actor;
+          t.acceptedOn = null;
+          t.declinedBy = null;
+        } else {
+          t.acceptance = null;
+        }
+      }
+    }
   });
   addLog(ctx, "Updated task " + taskId);
 }
@@ -109,9 +122,11 @@ export function reassignTaskRecord(ctx, { taskId, to }) {
 
 export function acceptTaskRecord(ctx, { taskId, note }) {
   tasks.update(taskId, (x) => {
+    const fromStatus = x.status;
     x.acceptance = "accepted";
     x.acceptedOn = ctx.date;
-    x.history.push({ date: ctx.date, actor: ctx.actor, role: "Assignee", from: x.status, to: x.status, note: "ACCEPTED — task accepted" + (note ? " · " + note : "") });
+    if (x.status === "todo") x.status = "doing";
+    x.history.push({ date: ctx.date, actor: ctx.actor, role: "Assignee", from: fromStatus, to: x.status, note: "ACCEPTED — task accepted" + (note ? " · " + note : "") });
   });
   addLog(ctx);
 }
@@ -122,6 +137,26 @@ export function declineTaskRecord(ctx, { taskId, note }) {
     x.acceptance = "declined";
     x.declinedBy = x.assignee;
     x.assignee = "Unassigned";
+  });
+  addLog(ctx);
+}
+
+export function toggleChecklistItemRecord(ctx, { taskId, itemIndex }) {
+  tasks.update(taskId, (x) => {
+    if (!x.checklist || !Array.isArray(x.checklist)) {
+      x.checklist = [
+        { label: "Login with valid credentials", done: false },
+        { label: "Forgot password flow", done: false },
+        { label: "Role-based access", done: false },
+        { label: "Validation messages", done: false },
+        { label: "Session timeout & logout", done: false },
+      ];
+    }
+    if (x.checklist[itemIndex]) {
+      x.checklist[itemIndex].done = !x.checklist[itemIndex].done;
+      const doneCount = x.checklist.filter((i) => i.done).length;
+      x.history.push({ date: ctx.date, actor: ctx.actor, role: ctx.role, from: x.status, to: x.status, note: `Checklist item updated (${doneCount}/${x.checklist.length} completed)` });
+    }
   });
   addLog(ctx);
 }

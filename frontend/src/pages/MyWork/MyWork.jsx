@@ -12,7 +12,7 @@ import { moveTask } from "../../utils/actions/taskActions";
 import { TS_LABEL } from "../../data";
 import { cx } from "../../utils/helpers/classNames";
 import { buildDevWork } from "../../utils/domain/devWork";
-import { useAction, useData, useHealthMap } from "../../app/useCrm";
+import { useAction, useData, useHealthMap, useMe } from "../../app/useCrm";
 
 /** One-click next step for the developer's own task, by current status. */
 const NEXT_STEP = { todo: ["doing", "Start"], doing: ["devdone", "Dev done"], failed: ["rework", "Start rework"], rework: ["devdone", "Dev done"] };
@@ -63,7 +63,8 @@ export default function MyWork() {
   const data = useData();
   const role = useSelector(selectRole);
   const H = useHealthMap();
-  const mw = useMemo(() => buildDevWork(data, role, H), [data, role, H]);
+  const me = useMe();
+  const mw = useMemo(() => buildDevWork(data, role, H, me), [data, role, H, me]);
 
   return (
     <div className="page">

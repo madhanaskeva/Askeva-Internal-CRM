@@ -9,7 +9,8 @@
 .qa-filter { min-width: 140px; }
 .qa-filter .ant-select-selector { border-radius: var(--radius-pill) !important; }
 
-.qa-grid { align-items: start; }
+.qa-grid { align-items: stretch; }
+.qa-grid > .card { height: 100%; display: flex; flex-direction: column; }
 .card.qa-card { padding: 14px; }
 .qa-head-stack { flex-direction: column; align-items: flex-start; gap: 2px; }
 .qa-line { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; border-top: 1px solid var(--track-bg); padding: 5px 0; align-items: baseline; }
