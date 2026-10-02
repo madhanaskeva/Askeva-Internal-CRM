@@ -17,6 +17,14 @@ export default function Card({ tone = "white", size = "lg", flush = false, noSha
     onClick && "card--clickable",
     className,
   );
+  // Draggable cards stay a <div> (Firefox won't drag a <button>) with button semantics.
+  if (onClick && rest.draggable) {
+    return (
+      <div role="button" tabIndex={0} className={classes} onClick={onClick} onKeyDown={(e) => e.key === "Enter" && onClick(e)} {...rest}>
+        {children}
+      </div>
+    );
+  }
   if (onClick) {
     return (
       <button type="button" className={classes} onClick={onClick} {...rest}>

@@ -10,14 +10,14 @@ import {
   acceptTask, ackHandover, declineTask, handOverTask, moveBug, moveTask, reassignTask, toggleBlock,
 } from "../../utils/actions/taskActions";
 import { fmt } from "../../utils/helpers/date";
-import { canMove, isDone, roleFor, taskTrack, trackOf, transitionsFor } from "../../utils/domain/tasks";
+import { canMove, isDone, roleFor, taskTrack, trackForAssignee, transitionsFor } from "../../utils/domain/tasks";
 import { severityTone } from "../../utils/domain/tones";
 import { mapTask } from "../../utils/domain/views";
 import Card from "../common/Card";
 import NoteInput from "../common/NoteInput";
 import Pill from "../common/Pill";
 import PillButton from "../common/PillButton";
-import { useAction, useData } from "../../app/useCrm";
+import { useAction, useData, useMe } from "../../app/useCrm";
 
 const historyChange = (h) =>
   h.from && h.from !== h.to ? `${TS_LABEL[h.from]} → ${TS_LABEL[h.to]}`
@@ -56,6 +56,7 @@ function TaskDrawerBody({ t, data }) {
   const dispatch = useDispatch();
   const run = useAction();
   const role = useSelector(selectRole);
+  const me = useMe();
   const note = useSelector((s) => s.ui.actionNote);
   const [showBlockInput, setShowBlockInput] = useState(false);
   const [blockReason, setBlockReason] = useState("");
@@ -76,11 +77,11 @@ function TaskDrawerBody({ t, data }) {
 
   const m = mapTask(t, data);
   const project = data.projects.find((p) => p.id === t.projectId) || {};
-  const flowRole = roleFor(role, t);
+  const flowRole = roleFor(role, t, me);
   const isManager = MANAGERS.includes(role);
   const bugs = data.bugs.filter((b) => b.taskId === t.id);
 
-  const actions = transitionsFor(t).map(([to, who]) => ({ to, who: who.join(" / "), ok: canMove(role, t, to) }));
+  const actions = transitionsFor(t).map(([to, who]) => ({ to, who: who.join(" / "), ok: canMove(role, t, to, me) }));
   const stagedIn = (() => {
     const r = (data.releases || []).filter((x) => x.tasks.includes(t.id)).sort((a, b) => b.requestedOn.localeCompare(a.requestedOn))[0];
     if (!r) return "";
@@ -92,7 +93,7 @@ function TaskDrawerBody({ t, data }) {
     !(data.releases || []).some((r) => r.tasks.includes(t.id) && r.env === "staging" && ["requested", "deployed"].includes(r.status));
   const canHandOver = flowRole === "Assignee" && t.acceptance === "accepted" && !isDone(t);
   const handOverOpts = (data.staff || [])
-    .filter((s) => s.status === "Active" && s.name !== t.assignee && trackOf({ assignee: s.name }) === taskTrack(t))
+    .filter((s) => s.status === "Active" && s.name !== t.assignee && trackForAssignee(s.name, data.staff) === taskTrack(t))
     .map((s) => ({ value: s.name, label: s.name }));
   const assigneeOpts = [...new Set([...ASSIGNEE_BASE, ...(data.staff || []).map((s) => s.name)])].map((v) => ({ value: v, label: v }));
 

@@ -99,6 +99,7 @@ const navLabel = (view, role) =>
   })[view];
 
 /** Dashboard gets shortcut children (Tasks / Finance / Follow-ups) like the original sidebar. */
+const DASHBOARD_CHILDREN = [["tasks", "Tasks"], ["finance", "Finance"], ["followups", "Follow-ups"]];
 
 /** Roles whose Dashboard has no shortcut children. */
 const NO_DASHBOARD_CHILDREN = ["PM", "PC"];

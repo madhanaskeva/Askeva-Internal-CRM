@@ -15,7 +15,7 @@ import { done, refuse } from "./context";
 export function moveTask(ctx, taskId, to, note = "") {
   const role = ctx.role;
   const t = getTaskById(taskId);
-  if (!canMove(role, t, to)) {
+  if (!canMove(role, t, to, ctx.actor)) {
     const allowed = ((TRANS[t.status] || []).find(([s]) => s === to) || [[], []])[1].join(", ") || "nobody";
     return refuse(`${role} cannot move "${TS_LABEL[t.status]}" → "${TS_LABEL[to]}". Allowed: ${allowed}.`);
   }
@@ -24,13 +24,13 @@ export function moveTask(ctx, taskId, to, note = "") {
   if (to === "passed" && hasOpenBugs(t.id)) return refuse("Cannot pass: open bugs on this task must be Verified first.");
   // Failing a task always goes through the "raise bug" form.
   if (to === "failed") return refuse(undefined, { openModal: { kind: "bug", extra: { taskId: t.id, projectId: t.projectId, assignee: t.assignee } } });
-  moveTaskStatus(ctx, { taskId, to, note, flowRole: roleFor(role, t) });
+  moveTaskStatus(ctx, { taskId, to, note, flowRole: roleFor(role, t, ctx.actor) });
   return done({ clearNote: true });
 }
 
 export function forceCloseTask(ctx, taskId) {
   if (isStrict()) return refuse("strictGates is on — a task can only be Closed after Tester Passed.");
-  forceCloseTaskRecord(ctx, { taskId, note: ctx.note, flowRole: roleFor(ctx.role, getTaskById(taskId)) });
+  forceCloseTaskRecord(ctx, { taskId, note: ctx.note, flowRole: roleFor(ctx.role, getTaskById(taskId), ctx.actor) });
   return done({ clearNote: true });
 }
 
@@ -38,7 +38,7 @@ export function toggleBlock(ctx, taskId, overrideNote) {
   const t = getTaskById(taskId);
   const note = (overrideNote !== undefined ? overrideNote : ctx.note || "").trim();
   if (!t.blocked && !note) return refuse("A reason is mandatory to block a task.");
-  toggleTaskBlock(ctx, { taskId, note, flowRole: roleFor(ctx.role, t) });
+  toggleTaskBlock(ctx, { taskId, note, flowRole: roleFor(ctx.role, t, ctx.actor) });
   return done({ clearNote: true });
 }
 
@@ -51,13 +51,13 @@ export function reassignTask(ctx, taskId, to) {
 }
 
 export function acceptTask(ctx, taskId) {
-  if (roleFor(ctx.role, getTaskById(taskId)) !== "Assignee") return refuse("Only the assigned developer can accept this task.");
+  if (roleFor(ctx.role, getTaskById(taskId), ctx.actor) !== "Assignee") return refuse("Only the assigned developer can accept this task.");
   acceptTaskRecord(ctx, { taskId, note: ctx.note });
   return done({ clearNote: true, message: "Accepted. Due date stays as set by the PC." });
 }
 
 export function declineTask(ctx, taskId) {
-  if (roleFor(ctx.role, getTaskById(taskId)) !== "Assignee") return refuse("Only the assigned developer can decline this task.");
+  if (roleFor(ctx.role, getTaskById(taskId), ctx.actor) !== "Assignee") return refuse("Only the assigned developer can decline this task.");
   const note = (ctx.note || "").trim();
   if (!note) return refuse("A reason is mandatory to decline a task.");
   declineTaskRecord(ctx, { taskId, note });
@@ -66,7 +66,7 @@ export function declineTask(ctx, taskId) {
 
 export function handOverTask(ctx, taskId, to) {
   const t = getTaskById(taskId);
-  if (roleFor(ctx.role, t) !== "Assignee") return refuse("Only the current assignee can hand over a task.");
+  if (roleFor(ctx.role, t, ctx.actor) !== "Assignee") return refuse("Only the current assignee can hand over a task.");
   if (!to || to === t.assignee) return refuse();
   const note = (ctx.note || "").trim();
   if (!note) return refuse("Add a note explaining the handover first.");

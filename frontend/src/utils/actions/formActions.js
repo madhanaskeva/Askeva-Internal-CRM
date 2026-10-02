@@ -3,14 +3,14 @@ import { STAGES } from "../../data";
 import { defaultMilestones } from "../storage/seed";
 import { TODAY, addDays, daysBetween } from "../helpers/date";
 import { parseAmount, uid } from "../helpers/format";
-import { DEV_TRACK, trackOf } from "../domain/tasks";
+import { trackForAssignee } from "../domain/tasks";
 import { addChangeRequest, getChangeRequestById } from "../entities/changeRequestUtils";
 import { addCommunication } from "../entities/communicationUtils";
 import { addFollowup } from "../entities/followupUtils";
 import { adjustPayslip } from "../entities/payrollUtils";
 import { addExpense, addInvoice, addProject, getProjectById, logEffort, logOverrun, requestRevision } from "../entities/projectUtils";
 import { isStrict } from "../entities/ruleUtils";
-import { saveStaff } from "../entities/staffUtils";
+import { getStaff, saveStaff } from "../entities/staffUtils";
 import { addTask, editTaskRecord } from "../entities/taskUtils";
 import { raiseBug } from "../entities/bugUtils";
 import { done } from "./context";
@@ -79,9 +79,11 @@ const handlers = {
     }
     const role = ctx.role;
     const project = getProjectById(form.projectId) || { stage: 0 };
-    const needsInbox = DEV_TRACK({ assignee: form.assignee }) && role !== "DevOps";
+    if (blank(form.assignee)) return "Pick who this task is assigned to";
+    const track = trackForAssignee(form.assignee, getStaff());
+    const needsInbox = ["frontend", "backend", "devops"].includes(track) && role !== "DevOps";
     const task = {
-      id: "t" + uid(), projectId: form.projectId, title: form.title, assignee: form.assignee, track: trackOf({ assignee: form.assignee }), owner: "PC",
+      id: "t" + uid(), projectId: form.projectId, title: form.title, assignee: form.assignee, track, owner: "PC",
       createdBy: ctx.actor, due: form.due, stage: form.stage || STAGES[project.stage], status: "todo", priority: form.priority, blocked: false,
       ...(form.opsKind ? { opsKind: form.opsKind } : {}),
       ...(role === "DevOps" ? { selfCreated: true } : {}),

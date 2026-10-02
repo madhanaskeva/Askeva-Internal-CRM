@@ -17,7 +17,7 @@ export default function Header({ view, projectId }) {
   let [eyebrow, title] = VIEW_TITLES[view] || VIEW_TITLES.dashboard;
   if (view === "detail") title = project?.client || "Project";
   if (view === "mywork") eyebrow = `${ROLE_LABEL[role]} · ${me}`;
-  if (view === "tasks") eyebrow = DEV_ROLES.includes(role) ? "Task board · my track only" : role === "Tester" ? "Task board · every track" : "Task management";
+  if (view === "tasks") eyebrow = DEV_ROLES.includes(role) ? `Task board · assigned to ${me}` : role === "Tester" ? "Task board · every track" : "Task management";
 
   return (
     <header className="app-header">

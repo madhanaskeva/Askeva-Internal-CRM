@@ -20,8 +20,8 @@ export const useFullData = useCrmData;
 /** Dataset scoped to the signed-in role (a PM only sees their own projects). */
 export function useData() {
   const full = useCrmData();
-  const { role, pmId } = useSelector(selectSession);
-  return scopeData(full, role, pmId);
+  const session = useSelector(selectSession);
+  return scopeData(full, session.role, session.pmId, getActorName(session, full));
 }
 
 export const useHealthMap = () => getHealthMap(useData());

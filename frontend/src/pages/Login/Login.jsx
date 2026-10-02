@@ -7,8 +7,9 @@ import { useSelector } from "react-redux";
 import { selectSession } from "../../redux/selectors";
 
 /**
- * Sign-in. The original prototype had no real authentication: the user chooses
- * who they are signing in as. Picking a role lands on that role's first view.
+ * Sign-in: brand panel on the left, role picker on the right. The original
+ * prototype had no real authentication — the user picks a role (then their
+ * name, where a role has several people) and lands on that role's first view.
  */
 export default function Login() {
   const { signedIn, role } = useSelector(selectSession);
@@ -16,15 +17,25 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      <div className="login-panel">
-        <div className="stack gap-4">
-          <img src={images.logoInk} alt="Askeva" className="logo-ink" />
-          <h1 className="overlay-title">
-            Sign in<span className="text-brand">.</span>
-          </h1>
-          <div className="fs-12 text-body">Choose who you are signing in as. Authentication is out of scope for this prototype.</div>
-        </div>
-        <RolePicker />
+      <div className="login-shell">
+        <aside className="login-brand">
+          <img src={images.logoTile} alt="Ask Eva" className="login-brand__logo" />
+          <div className="login-brand__text">
+            <div className="login-brand__title">Askeva internal CRM</div>
+            <div className="login-brand__sub">Projects · tasks · QA · deploys — one workflow, every role.</div>
+          </div>
+          <div className="login-brand__foot">Askeva · 2026 · SOP v2</div>
+        </aside>
+
+        <section className="login-panel">
+          <div className="stack gap-4">
+            <h1 className="overlay-title">
+              Sign in<span className="text-brand">.</span>
+            </h1>
+            <div className="fs-12 text-body">Pick your role. Where a role has several people, pick your name next — developers only see the tasks assigned to them.</div>
+          </div>
+          <RolePicker />
+        </section>
       </div>
     </div>
   );

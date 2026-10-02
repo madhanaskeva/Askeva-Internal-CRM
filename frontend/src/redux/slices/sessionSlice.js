@@ -3,15 +3,17 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { loadSession } from "../../utils/storage/persistence";
 
-const defaults = { role: "PM", pmId: null, signedIn: true, clientProject: "p1" };
+const defaults = { role: "PM", pmId: null, staffName: null, signedIn: true, clientProject: "p1" };
 
 const sessionSlice = createSlice({
   name: "session",
   initialState: () => ({ ...defaults, ...(loadSession() || {}) }),
   reducers: {
-    roleSelected(state, { payload: { role, pmId = null } }) {
+    /** staffName: the person signing in for Frontend / Backend / DevOps / Tester. */
+    roleSelected(state, { payload: { role, pmId = null, staffName = null } }) {
       state.role = role;
       state.pmId = pmId;
+      state.staffName = staffName;
       state.signedIn = true;
     },
     signedOut(state) {

@@ -1,6 +1,6 @@
 // Developer "My work" + "Inbox" view-models — port of the original `myTasks`,
 // `inboxTasks`, `inbox` and `mw` in renderVals.
-import { BACK, FRONT, STAGES } from "../../data";
+import { STAGES } from "../../data";
 import { TODAY, daysBetween, fmt } from "../helpers/date";
 import { isDone, roleTrack, taskTrack } from "./tasks";
 import { mapTask } from "./views";
@@ -18,7 +18,8 @@ const refFor = (track, p) =>
 export function buildDevWork(data, role, H) {
   const track = roleTrack(role);
   const myTasks = track ? data.tasks.filter((t) => taskTrack(t) === track) : [];
-  const myBugs = track ? data.bugs.filter((b) => (FRONT.includes(b.developer) && track === "frontend") || (BACK.includes(b.developer) && track === "backend")) : [];
+  // `data` is already scoped to the signed-in developer (see scopeData).
+  const myBugs = track ? data.bugs : [];
   const map = (t) => mapTask(t, data);
 
   const inbox = myTasks

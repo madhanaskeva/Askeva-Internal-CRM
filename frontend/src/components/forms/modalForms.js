@@ -2,8 +2,9 @@
 // Each kind: { title, submit, initial(ctx), fields(ctx, form), note?(ctx) }
 //   ctx = { role, data, fullData, extra, strict, modal }
 // Field: { key, label, kind: text|number|date|select|area, placeholder?, options? } or { heading }.
-import { ROLE_OPTIONS } from "../../data";
+import { ROLE_DEFAULT_NAME, ROLE_OPTIONS, ROLE_STAFF, TRACK_POOL } from "../../data";
 import { TODAY, addDays } from "../../utils/helpers/date";
+import { trackForAssignee } from "../../utils/domain/tasks";
 
 const opts = (a) => a.map((v) => ({ value: v, label: v }));
 const H = (heading) => ({ heading });
@@ -17,10 +18,42 @@ const staffOpt = (data) => [
 ];
 const defaultPid = ({ extra, data }) => extra.projectId || (data.projects[0] || {}).id;
 
+/**
+ * Task assignee picker — registered people grouped by role (this project's team
+ * first), each track's shared pool, then coordination roles. Assigning a
+ * developer by name sends the task to that person's Inbox.
+ */
+const assigneeOpts = (data, projectId) => {
+  const onTeam = new Set(Object.values((data.projects.find((p) => p.id === projectId) || {}).team || {}));
+  const people = (data.staff || []).filter((s) => s.status === "Active");
+  const group = (label, appRole, pool = []) => {
+    const names = people.filter((s) => ROLE_STAFF[appRole].includes(s.role)).map((s) => s.name);
+    if (!names.length) names.push(ROLE_DEFAULT_NAME[appRole]);
+    names.sort((a, b) => onTeam.has(b) - onTeam.has(a));
+    return {
+      label,
+      options: [
+        ...names.map((n) => ({ value: n, label: onTeam.has(n) ? `${n} · on this project` : n })),
+        ...pool.map((n) => ({ value: n, label: `${n} (shared)` })),
+      ],
+    };
+  };
+  return [
+    group("Front-end developers", "Frontend", TRACK_POOL.frontend),
+    group("Back-end developers", "Backend", TRACK_POOL.backend),
+    group("DevOps", "DevOps"),
+    group("Testers", "Tester", ["Tester"]),
+    { label: "Coordination", options: opts(["PC", "PM", "Client SPOC", "Sales"]) },
+  ];
+};
+
 export const MODAL_FORMS = {
   project: {
     title: "New project",
     submit: "Create project",
+    width: 720,
+    steps: true,
+    note: () => "Fill the six steps from the Sales handover. Required: client name, SPOC and project cost — everything else can be refined later on the project page.",
     initial: ({ data }) => ({
       client: "", code: "ASK-2026-0" + (47 + data.projects.length - 4), projectType: "Website + Admin panel", salesOwner: "", spoc: "", spocPhone: "", spocEmail: "",
       clientManager: "", clientOwner: "", billing: "Fixed", cost: "", advance: "40", terms: "40% advance · 30% on UI approval · 30% on handover", paymentConfirmed: "No",
@@ -29,13 +62,13 @@ export const MODAL_FORMS = {
     }),
     fields: ({ data }) => [
       H("01 · Sales handover (SOP §3)"),
-      F("client", "Client name", "text", { placeholder: "e.g. Nova Retail" }),
+      F("client", "Client name *", "text", { placeholder: "e.g. Nova Retail" }),
       F("code", "Project code"),
       F("projectType", "Project type", "select", { options: opts(["Website + Admin panel", "Mobile app", "WhatsApp chatbot / automation", "CRM / ERP integration", "Custom software"]) }),
       F("salesOwner", "Sales owner", "text", { placeholder: "Who closed the deal" }),
       F("paymentConfirmed", "Payment confirmed by Sales?", "select", { options: opts(["No", "Yes"]) }),
       H("02 · Client contacts & escalation"),
-      F("spoc", "Client SPOC", "text", { placeholder: "Name" }),
+      F("spoc", "Client SPOC *", "text", { placeholder: "Name" }),
       F("spocPhone", "SPOC phone", "text", { placeholder: "+91" }),
       F("spocEmail", "SPOC email", "text", { placeholder: "name@client.com" }),
       F("clientManager", "Client manager (L2)"),
@@ -43,7 +76,7 @@ export const MODAL_FORMS = {
       F("callTime", "Daily call time", "text", { placeholder: "11:00" }),
       H("03 · Commercials & budget"),
       F("billing", "Billing model", "select", { options: opts(["Fixed", "Resource"]) }),
-      F("cost", "Project cost", "text", { placeholder: "₹4,80,000 or ₹1,20,000 / month" }),
+      F("cost", "Project cost *", "text", { placeholder: "₹4,80,000 or ₹1,20,000 / month" }),
       F("advance", "Advance %", "number"),
       F("terms", "Payment terms", "area"),
       F("start", "Start date", "date"),
@@ -51,7 +84,7 @@ export const MODAL_FORMS = {
       H("04 · Infrastructure (onboarding §4.2)"),
       F("domain", "Domain", "select", { options: opts(["Existing — client holds DNS", "New purchase by client", "New purchase by Askeva", "TBD"]) }),
       F("server", "Server", "select", { options: opts(["Askeva-hosted", "Client server (AWS)", "Client server (other)", "TBD"]) }),
-      F("cloud", "Cloud elements / integrations", "text", { placeholder: "S3, payment gateway, WhatsApp API, SMS…" }),
+      F("cloud", "Cloud elements / integrations", "text", { placeholder: "S3, payment gateway, WhatsApp API, SMS…", span: 2 }),
       H("05 · Staff allocation"),
       F("uiLead", "UI / Frontend", "select", { options: staffOpt(data) }),
       F("backendLead", "Backend developer", "select", { options: staffOpt(data) }),
@@ -68,7 +101,16 @@ export const MODAL_FORMS = {
 
   task: {
     title: ({ extra, role }) => (extra?.taskId ? "Edit task" : role === "DevOps" ? "New infra task (self-created · no acceptance)" : "New task"),
-    submit: ({ extra, role }) => (extra?.taskId ? "Save changes" : role === "DevOps" ? "Add infra task" : "Add task"),
+    submit: ({ extra, role }) => (extra?.taskId ? "Save changes" : role === "DevOps" ? "Add infra task" : "Assign task"),
+    width: 600,
+    hint: ({ role, fullData, extra }, form) => {
+      if (extra?.task && form.assignee === extra.task.assignee) return "";
+      if (!form.assignee) return "Pick who does it — developers get the task in their Inbox to accept.";
+      const dev = ["frontend", "backend", "devops"].includes(trackForAssignee(form.assignee, fullData.staff));
+      return dev && role !== "DevOps"
+        ? `→ Lands in ${form.assignee}'s Inbox. Once ${form.assignee} accepts, it moves to their My work and the board's To do.`
+        : `→ Assigned to ${form.assignee} directly — no acceptance step.`;
+    },
     initial: (c) => {
       if (c.extra?.task) {
         const t = c.extra.task;
@@ -84,17 +126,17 @@ export const MODAL_FORMS = {
       }
       return c.role === "DevOps"
         ? { projectId: defaultPid(c), title: "", assignee: "Naveen", due: TODAY, stage: "Infra", priority: "Med", opsKind: "Server provisioning" }
-        : { projectId: defaultPid(c), title: "", assignee: "PC", due: TODAY, stage: "", priority: "Med", opsKind: "" };
+        : { projectId: defaultPid(c), title: "", assignee: "", due: TODAY, stage: "", priority: "Med", opsKind: "" };
     },
     fields: ({ data, role }, form) => [
       F("projectId", "Project", "select", { options: projOpts(data) }),
-      F("title", "Task", "text", { placeholder: "What needs to happen" }),
-      F("assignee", "Assignee", "select", { options: opts(["PC", "PM", "Rahul", "Sneha", "Farhan", "Imran", "Karthik", "Naveen", "Divya", "UI team", "Dev team", "Senior Dev", "Tester", "Client SPOC", "Sales"]) }),
-      ...(role === "DevOps" || form.assignee === "Naveen"
-        ? [F("opsKind", "Infra task type", "select", { options: opts(["Server provisioning", "Domain / DNS / SSL", "Backups & monitoring", "Access / credentials handover", "Deploy-linked"]) })]
-        : []),
-      F("due", "Due date", "date"),
       F("priority", "Priority", "select", { options: opts(["High", "Med", "Low"]) }),
+      F("title", "Task", "text", { placeholder: "What needs to happen — e.g. Build checkout page UI", span: 2 }),
+      F("assignee", "Assign to", "select", { placeholder: "Pick a developer", options: assigneeOpts(data, form.projectId) }),
+      F("due", "Due date", "date"),
+      ...(role === "DevOps" || form.assignee === "Naveen"
+        ? [F("opsKind", "Infra task type", "select", { options: opts(["Server provisioning", "Domain / DNS / SSL", "Backups & monitoring", "Access / credentials handover", "Deploy-linked"]), span: 2 })]
+        : []),
     ],
   },
 

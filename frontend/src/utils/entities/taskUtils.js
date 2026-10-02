@@ -2,7 +2,8 @@
 // functions only apply an already-validated change.
 import { STORAGE_KEYS, tasks as defaultTasks } from "../../data";
 import { createCollection } from "../storage/collection";
-import { isDone, needsAccept, trackOf } from "../domain/tasks";
+import { isDone, needsAccept, trackForAssignee } from "../domain/tasks";
+import { getStaff } from "./staffUtils";
 import { addLog } from "./syslogUtils";
 
 const tasks = createCollection(STORAGE_KEYS.TASKS, defaultTasks);
@@ -30,8 +31,11 @@ export function deleteTask(ctx, { taskId }) {
 
 export function editTaskRecord(ctx, { taskId, updates }) {
   tasks.update(taskId, (t) => {
+    const reassigned = updates.assignee && updates.assignee !== t.assignee;
     Object.assign(t, updates);
-    if (updates.assignee) t.track = trackOf(t);
+    if (updates.assignee) t.track = trackForAssignee(t.assignee, getStaff());
+    // A new developer must accept it again from their Inbox.
+    if (reassigned && needsAccept(t)) Object.assign(t, { acceptance: "pending", assignedOn: ctx.date, assignedBy: ctx.actor, acceptedOn: null });
   });
   addLog(ctx, "Updated task " + taskId);
 }
@@ -88,7 +92,7 @@ export function reassignTaskRecord(ctx, { taskId, to }) {
   tasks.update(taskId, (x) => {
     x.history.push({ date: ctx.date, actor: ctx.actor, role: ctx.role, from: x.status, to: x.status, note: `Reassigned ${x.assignee} → ${to}` });
     x.assignee = to;
-    x.track = trackOf(x);
+    x.track = trackForAssignee(to, getStaff());
     if (x.handover) x.handover.ack = true;
     if (needsAccept(x)) {
       x.acceptance = "pending";

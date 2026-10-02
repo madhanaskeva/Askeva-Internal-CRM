@@ -6,7 +6,7 @@ import dayjs from "dayjs";
  * Values are kept as strings (ISO dates, numeric strings), the same shape the
  * original stored, and converted for the Ant Design controls here.
  */
-export default function FormField({ field, value, onChange }) {
+export default function FormField({ field, value, onChange, className }) {
   const { label, kind, placeholder, options } = field;
   let control;
   switch (kind) {
@@ -14,7 +14,8 @@ export default function FormField({ field, value, onChange }) {
       control = (
         <Select
           className="brand-input"
-          value={value ?? ""}
+          value={value === "" && placeholder ? undefined : (value ?? "")}
+          placeholder={placeholder}
           options={options}
           onChange={onChange}
           showSearch={options.length > 8}
@@ -49,5 +50,5 @@ export default function FormField({ field, value, onChange }) {
     default:
       control = <Input className="brand-input" value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
   }
-  return <Form.Item label={label}>{control}</Form.Item>;
+  return <Form.Item label={label} className={className}>{control}</Form.Item>;
 }

@@ -4,18 +4,37 @@ import InboxCard from "../../components/cards/InboxCard";
 import Card from "../../components/common/Card";
 import Pill from "../../components/common/Pill";
 import SectionLabel from "../../components/common/SectionLabel";
+import PillButton from "../../components/common/PillButton";
 import { useDispatch, useSelector } from "react-redux";
 import { selectRole } from "../../redux/selectors";
-import { taskOpened } from "../../redux/slices/uiSlice";
+import { taskOpened, toastShown } from "../../redux/slices/uiSlice";
+import { moveTask } from "../../utils/actions/taskActions";
+import { TS_LABEL } from "../../data";
 import { cx } from "../../utils/helpers/classNames";
 import { buildDevWork } from "../../utils/domain/devWork";
-import { useData, useHealthMap } from "../../app/useCrm";
+import { useAction, useData, useHealthMap } from "../../app/useCrm";
 
-/** Clickable work item inside a My-work column. */
-function WorkItem({ taskId, tone = "white", head, badge, title, sub, subClass = "text-muted" }) {
+/** One-click next step for the developer's own task, by current status. */
+const NEXT_STEP = { todo: ["doing", "Start"], doing: ["devdone", "Dev done"], failed: ["rework", "Start rework"], rework: ["devdone", "Dev done"] };
+
+/** Clickable work item inside a My-work column, with an optional quick "next step" button. */
+function WorkItem({ taskId, status, blocked, tone = "white", head, badge, title, sub, subClass = "text-muted" }) {
   const dispatch = useDispatch();
+  const run = useAction();
+  const next = !blocked && NEXT_STEP[status];
+  const advance = (e) => {
+    e.stopPropagation();
+    if (run(moveTask, taskId, next[0]).ok) dispatch(toastShown(`${title} → ${TS_LABEL[next[0]]}`));
+  };
+  const open = () => dispatch(taskOpened(taskId));
   return (
-    <button type="button" className={cx("mw-item", `tone-${tone}`)} onClick={() => dispatch(taskOpened(taskId))}>
+    <div
+      role="button"
+      tabIndex={0}
+      className={cx("mw-item", `tone-${tone}`)}
+      onClick={open}
+      onKeyDown={(e) => e.key === "Enter" && open()}
+    >
       {(head || badge) && (
         <div className="row row--between gap-8 w-full">
           {head}
@@ -23,10 +42,21 @@ function WorkItem({ taskId, tone = "white", head, badge, title, sub, subClass = 
         </div>
       )}
       <div className="fw-600 text-ink fs-12-5">{title}</div>
-      {sub && <div className={`fs-11 ${subClass}`}>{sub}</div>}
-    </button>
+      {(sub || next) && (
+        <div className="row row--between items-center gap-8 w-full">
+          {sub && <div className={`fs-11 ${subClass}`}>{sub}</div>}
+          {next && (
+            <PillButton size="xs" tone={next[0] === "doing" || next[0] === "rework" ? "green" : "ink"} className="ml-auto" onClick={advance}>
+              {next[1]} →
+            </PillButton>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
+
+const Empty = ({ children }) => <div className="mw-empty">{children}</div>;
 
 /** Developer home: inbox strip, today's work, rework & bugs, waiting for test, blocked, references. */
 export default function MyWork() {
@@ -60,10 +90,13 @@ export default function MyWork() {
       <div className="grid-auto min-280 mw-grid">
         <Card className="stack gap-8 mw-col">
           <div className="section-title__text">Today&apos;s work</div>
+          {mw.today.length === 0 && <Empty>Nothing in progress. Accept a task from your Inbox to start.</Empty>}
           {mw.today.map((t) => (
             <WorkItem
               key={t.id}
               taskId={t.id}
+              status={t.raw.status}
+              blocked={t.raw.blocked}
               tone={t.rowTone}
               head={<span className="mono-meta">{t.project} · {t.stage}</span>}
               badge={<Pill size="xs" tone={t.statusTone}>{t.status}</Pill>}
@@ -76,10 +109,13 @@ export default function MyWork() {
 
         <Card tone="rose" className="stack gap-8 mw-col">
           <div className="section-title__text">Rework &amp; bugs assigned to me</div>
+          {mw.rework.length + mw.bugs.length === 0 && <Empty>No rework or open bugs.</Empty>}
           {mw.rework.map((t) => (
             <WorkItem
               key={t.id}
               taskId={t.id}
+              status={t.raw.status}
+              blocked={t.raw.blocked}
               head={<span className="mono-meta">{t.project}</span>}
               badge={<Pill size="xs" tone={t.statusTone}>{t.status}</Pill>}
               title={t.title}
@@ -100,6 +136,7 @@ export default function MyWork() {
 
         <Card tone="paper" className="stack gap-8 mw-col">
           <div className="section-title__text">Waiting for testing</div>
+          {mw.waiting.length === 0 && <Empty>Nothing waiting for QA.</Empty>}
           {mw.waiting.map((t) => (
             <WorkItem
               key={t.id}
@@ -111,6 +148,7 @@ export default function MyWork() {
             />
           ))}
           <div className="section-title__text mt-4">Blocked</div>
+          {mw.blocked.length === 0 && <Empty>Nothing blocked.</Empty>}
           {mw.blocked.map((t) => (
             <WorkItem key={t.id} taskId={t.id} title={t.title} sub={`BLOCKED · ${t.project}`} subClass="text-danger" />
           ))}

@@ -2,13 +2,13 @@
 // role-scoped view of it, and memoised derived views (health, finance, alerts…).
 // Everything here is built from the entity utils → localStorage. No Redux.
 import { useSyncExternalStore } from "react";
-import { STORAGE_KEYS } from "../../data";
+import { DEV_ROLES, STORAGE_KEYS } from "../../data";
 import { ensureCrmStorage, DATASETS } from "./crmStorage";
 import { buildAlerts } from "../domain/alerts";
 import { buildFinMap, portfolioTotals, roleRate } from "../domain/finance";
 import { buildHealthMap } from "../domain/health";
 import { buildDeadlineRow, buildFinRow } from "../domain/rows";
-import { actorName } from "../domain/tasks";
+import { actorName, isMyTask } from "../domain/tasks";
 import { getStorage, subscribeStorage } from "./storage";
 import { getPms } from "../entities/staffUtils";
 import { getRules, isStrict } from "../entities/ruleUtils";
@@ -55,7 +55,13 @@ export const useCrmData = () => useSyncExternalStore(subscribeCrm, getCrmData);
  * A Project Manager only sees their own projects (and the tasks, follow-ups,
  * CRs, bugs and releases belonging to them); every other role sees everything.
  */
-export const scopeData = memoLast((full, role, pmId) => {
+export const scopeData = memoLast((full, role, pmId, me) => {
+  // Developers see only the tasks assigned to them (by name or their track's pool) and the bugs on them.
+  if (DEV_ROLES.includes(role)) {
+    const tasks = full.tasks.filter((t) => isMyTask(t, me));
+    const ids = new Set(tasks.map((t) => t.id));
+    return { ...full, tasks, bugs: full.bugs.filter((b) => b.developer === me || ids.has(b.taskId)) };
+  }
   if (role !== "PM") return full;
   const staff = full.staff || [];
   const pm = staff.find((x) => x.id === pmId) || staff.find((x) => x.role === "Project Manager");

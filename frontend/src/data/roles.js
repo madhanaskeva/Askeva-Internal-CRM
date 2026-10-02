@@ -8,6 +8,21 @@ export const FRONT = ["Rahul", "Sneha", "UI team"];
 export const BACK = ["Farhan", "Imran", "Dev team", "Senior Dev", "Karthik"];
 export const OPS = ["Naveen", "DevOps"];
 
+/**
+ * Staff roles (Settings → Staff) that sign in as each personal app role.
+ * Sign-in shows one card per registered person, so tasks reach them by name.
+ */
+export const ROLE_STAFF = { Frontend: ["UI / Frontend"], Backend: ["Backend", "Senior Dev / Architect"], DevOps: ["DevOps"], Tester: ["Manual tester"] };
+
+/** Default person for a personal role when nobody of that role is registered. */
+export const ROLE_DEFAULT_NAME = { Frontend: "Rahul", Backend: "Farhan", DevOps: "Naveen", Tester: "Divya" };
+
+/** Staff role → task track. */
+export const STAFF_TRACK = { "UI / Frontend": "frontend", Backend: "backend", "Senior Dev / Architect": "backend", DevOps: "devops", "Manual tester": "qa" };
+
+/** Shared pool assignees every developer of a track also picks up. */
+export const TRACK_POOL = { frontend: ["UI team"], backend: ["Dev team", "Senior Dev"], devops: ["DevOps"] };
+
 /** Views each role may open, in sidebar order. The first entry is the role's landing view. */
 export const ROLE_NAV = {
   SuperAdmin: ["dashboard", "projects", "deadlines", "crs", "teamqa", "deploy", "audit", "team", "pl", "finance", "salary", "settings", "syslog"],
